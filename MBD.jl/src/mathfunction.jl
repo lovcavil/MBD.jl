@@ -800,6 +800,8 @@ function PhiEval(tn, q, SJDT, par)
 end
 
 
+
+
 function PhiqEval(q, SJDT, par)
 
     nb, ngc, nh, nhc, nd, qtol, app = parPart(par)
@@ -876,6 +878,47 @@ function PhiqEval(q, SJDT, par)
 
     return Phiq
 end
+
+function PhiqEval(tn, q, SJDT, par)
+    nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
+
+    Phiq = zeros(nc, ngc)
+    I3 = Matrix{Float64}(I, 3, 3)
+    k = 1  # Joint No.
+    m = 0  # Constraint equation Counter - 1
+
+    while k <= nh
+        # Distance Constraint
+        if SJDT[1, k] == 1
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            Phiq1, Phiq2 = bbPhiqdist(i, j, s1pr, s2pr, d, tn, q, par)
+            Phiq = Add(Phiq, Phiq1, m, 7 * (i - 1))
+
+            if j >= 1
+                Phiq = Add(Phiq, Phiq2, m, 7 * (j - 1))
+            end
+
+            m += 1
+        end
+
+        # [Continue with other constraints, similar to MATLAB but adapted to Julia syntax]
+
+        k += 1
+    end
+
+    # Euler Parameter Normalization Constraints
+    i = 1
+    while i <= nb
+        r1, p1 = qPart(q, i)
+        Phiq1 = [zeros(1, 3) p1']
+        Phiq = Add(Phiq, Phiq1, m, 7 * (i - 1))
+        m += 1
+        i += 1
+    end
+
+    return Phiq
+end
+
 
 function RevPart(k, SJDT)
     i = SJDT[2, k]

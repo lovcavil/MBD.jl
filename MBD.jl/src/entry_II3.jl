@@ -25,8 +25,6 @@ global uz = [0, 0, 1]
 global z3 = zeros(3)
 
 
-
-
 # Data Storage Arrays
 # Preallocate a large array with more columns than currently needed.
 # For example, 100 columns as a starting point:
@@ -119,8 +117,6 @@ while tn < tfinal
     Gam = P2 * qd + Pstt
     qdd = -Phiq \ Gam
     Qdd[:, n] = qdd
-
-
 
 
     # ... (Rest of the application-specific output calculations)
