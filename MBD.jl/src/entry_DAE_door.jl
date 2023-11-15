@@ -1,14 +1,13 @@
 include("mathfunction_II7.jl")
-include("AppData_II7.jl")
+include("AppData_door.jl")
 include("ImplicitIndex1.jl")
-include("ExplicitRKFN45.jl")
 using LinearAlgebra
 using Plots
 using CSV, DataFrames
 using IterativeRefinement
 
 
-function run(app)
+function run()
     # Integration and Error Control Parameters
     intol = 10^-6     # Tolerance in solving discretized equations of motion
     Atol = 10^-5      # Absolute error tolerance for variable step methods
@@ -20,14 +19,14 @@ function run(app)
     VelConstrMax = 10^-4  # Limit on velocity constraint error
     AccConstrMax = 10^20  # Limit on acceleration constraint error
 
-    h0 = 0.1       # Initial time step
+    h0 = 0.0001       # Initial time step
     h = h0
-    hmax = 0.1
+    hmax = 0.001
     hvar = 1          # hvar=1, variable h; hvar=2, constant h
 
-    constrcor = 2     # constrcor=1, correct; constrcor=2, no correct
+    constrcor = 1     # constrcor=1, correct; constrcor=2, no correct
 
-    tfinal = 5
+    tfinal = 2
 
     # Integration Method
     integ = 1         # integ=1-ImplicitIndex1; alpha=0-Trapezoidal; alpha<0-HHT
@@ -42,17 +41,11 @@ function run(app)
     g = 9.81
 
     # Application Data
-    #app = 2           # Select application:
-    # 1: Pendulum, Spherical to Ground
-    # 2: Spin Stabilized Top, Spherical to Ground
-    # 3: One Body Pendulum, Dist. to Ground
-    # 4: Double Pendulum
-    # 5: One Body Cylindrical with Spring
-    # 6: Spatial Slider-Crank
-    # 7: Transient Top, Spherical to Ground
+    app = 101           # Select application:
+
 
     # Application Data Function
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(app)
+    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData(app)
 
     par = Any[nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA]
 
@@ -157,13 +150,10 @@ function run(app)
     x1 = [0.0]
     y1 = [0.0]
     z1 = [0.0]
-    x2 = [0.0]
-    y2 = [0.0]
     z2 = [0.0]
     corvelrpt=[0.0]
     corposrpt = [0]
     corpositer= [0] 
-    ECondrpt=[0.0]
     # Integration
     while t[n] < tfinal
 
@@ -198,17 +188,7 @@ function run(app)
             push!(Errrpt, Err)
             push!(hrpt, h)
         end
-        if integ == 4
-            q, qd, qdd, Lam, ECond = ExplicitNystrom4(n, tn, Q, Qd, h, SMDT, STSDAT, SJDT, par)
-            push!(ECondrpt,ECond)
-        end
-        
-        if integ == 5
-            q, qd, qdd, ECond, h, nch = ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
-            push!(ECondrpt,ECond)
-            push!(hrpt, h)
-        end
-        
+
 
         # Corrections if velocity or position errors exceed tolerances
         if constrcor == 1
@@ -289,12 +269,7 @@ function run(app)
         TE[n] = KE[n] + PE[n] + SE[n]
 
         # Data of Interest (Enter for each application)
-        if app == 1||app == 101 ||app == 102 ||app == 103||app==201
-            push!(x1, q[1])
-            push!(y1, q[2])
-            push!(z1, q[3])
-        end
-        if app == 2
+        if app == 1
             push!(x1, q[1])
             push!(y1, q[2])
             push!(z1, q[3])
@@ -302,14 +277,6 @@ function run(app)
         if app == 6
             push!(z2, q[10])
             # println(tn)
-        end
-        if app == 202||app == 203
-            push!(x1, q[1])
-            push!(y1, q[2])
-            push!(z1, q[3])
-            push!(x2, q[8])
-            push!(y2, q[9])
-            push!(z2, q[10])
         end
         # Calculate constraint error
         Phi = mathfunction.PhiEval(tn, q, SJDT, par)
@@ -321,13 +288,11 @@ function run(app)
         push!(AccConstrNorm, norm(Phiq * qdd + Gam))
 
     end
-    if app == 1||app == 101 ||app == 102 ||app == 103||app == 201
-        #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
-        #display(f)
-        f1 = plot(t, y1, label="y", title="Output Data Plot", xlabel="t", ylabel="y", legend=:topright)
+    if app == 1
+        f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
+        display(f)
+        f1 = plot(t, y1, label="yd", title="Output Data Plot", xlabel="t", ylabel="y", legend=:topright)
         display(f1)
-        f2 = plot(t, z1, label="z", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
-        display(f2)
     end
     if app == 6
         #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
@@ -335,24 +300,6 @@ function run(app)
         f1 = plot(t, z2, label="z2", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
         display(f1)
     end
-    if app == 202||app == 203
-        f5 = plot(t, x1, label="x", title="Output Data Plot", xlabel="t", ylabel="x", legend=:topright)
-        display(f5)
-        f6 = plot(t, y1, label="y", title="Output Data Plot", xlabel="t", ylabel="y", legend=:topright)
-        display(f6)
-        f7 = plot(t, z1, label="z", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
-        display(f7)
-
-
-        f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
-        display(f)
-        f2 = plot3d(x2, y2, z2, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot2")
-        display(f2)
-    end
 end
 
-
-#run(101)
-#run(102)
-#run(103)
-run(203)
+run()

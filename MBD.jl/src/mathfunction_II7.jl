@@ -270,8 +270,8 @@ function bbP3dot1(i, j, a1pr, a2pr, tn, q, qd, par)
         r2d, p2d = qPart(qd, j)
         BT2 = BTran(p2, a2pr)
         BT2d = BTran(p2d, a2pr)
-        P31 = hcat(0, 0, 0, 2 * dot(p2d, BT2' * BT1d) + dot(p2d, BT2d * BT1))
-        P32 = hcat(0, 0, 0, 2 * dot(p1d, BT1' * BT2d) + dot(p1d, BT1d * BT2))
+        P31 = hcat(0, 0, 0, 2 * (p2d'* BT2' * BT1d) + (p2d'* BT2d' * BT1))# from source code error
+        P32 = hcat(0, 0, 0, 2 * (p1d'* BT1' * BT2d) + (p1d'* BT1d' * BT2))
     end 
 
     return P31, P32
@@ -932,6 +932,31 @@ end
 function TEval(a)
     T =vcat( hcat(0,-a'),hcat( a,-atil(a)))
     return T
+end
+function ODEfunct(tn, q, qd, SMDT, STSDAT, SJDT, par)
+    nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
+
+    Gam = GamEval(tn, q, qd, SJDT, par)
+    QA = QAEval(tn, q, qd, SMDT, STSDAT, par)
+    S = SEval(q, qd, SMDT, par)
+    RHS = vcat(QA + S, -Gam)
+    M = MEval(q, SMDT, par)
+    Phiq = PhiqEval(tn, q, SJDT, par)
+    E = vcat(hcat(M,Phiq'), hcat(Phiq,zeros(nc, nc)))
+    ECond = cond(E)
+
+    x = E \ RHS
+
+    qdd = zeros(ngc)
+    for i in 1:ngc
+        qdd[i] = x[i]
+    end
+    Lam = zeros(nc)
+    for i in 1:nc
+        Lam[i] = x[ngc + i]
+    end
+
+    return qdd, Lam, ECond
 end
 
 
