@@ -3,13 +3,60 @@ module mathfunction
 using Test
 using LinearAlgebra
 using BlockDiagonals
-
+using CSV, DataFrames
 export add_constraint!
 export atilde
 export ATran,BTran,qPart,bbP2dist,bbP2dot1,bbP2dot2,bbP2RotDr,bbP2sph
 export bbPhidist,bbPhiqdist,bbPhidot1,bbPhidot2,bbPhiqdot1,bbPhiqdot2
-export bbPhiqRotDr,bbPhiqsph,InitConfig,PhiqEval,PhiEval
+export bbPhiqRotDr,bbPhiqsph,InitConfig,PhiqEval,PhiEval,einv
+function einv(A,b)
+    x=[]
+    # try
+    #     x = inv(A) * b  # 尝试执行此操作
+    # catch e
+    #     if e isa SingularException
+    #         println("发生1 SingularException：", e)
+    #         x = inv(A+0.01*I) * b  
+    #         # 处理 SingularException 的代码
+    #     elseif e isa MethodError
+    #         x = pinv(A) * b  # 如果上面的代码失败，执行这行代码
+    #         println("发生2 MethodError：", e)
+    #         # 处理 MethodError 的代码
+    #     else
+    #         x = pinv(A) * b  # 如果上面的代码失败，执行这行代码
+    #         println("发生异常3，错误信息：", e)  # 打印异常信息
+    #     end
 
+    # end
+
+    println("rank",rank(A))
+    try
+        println("eI")
+        x = (A+0.001*I) \ b
+        
+    catch e
+        println(e)
+        println("w = -(JJ+0.0001*I) \\ Resid")
+        x = (A+0.01*I) \ b
+    end
+    try
+        println("err_\\",norm(A \ b))
+    catch e
+    end
+    try
+        println("err_\\I",norm((A+0.001*I) \ b))
+    catch e
+    end
+    try
+        println("err_inv",norm(inv(A) * b))
+    catch e
+    end
+    try
+        println("err_pinv",norm(pinv(A) * b))
+    catch e
+    end
+    return x
+end
 # Define the function from the previous translation
 function add_constraint!(A, B, m, n)
     r, s = size(B, 1), size(B, 2)
@@ -66,8 +113,8 @@ function qPart(q, i)
 end
 
 # Example usage:
-q = rand(14) # Example vector of length 14, which can hold data for two 'i' indices
-i = 2        # We want to extract the second set of (r, p)
+#q = rand(14) # Example vector of length 14, which can hold data for two 'i' indices
+#i = 2        # We want to extract the second set of (r, p)
 
 #= r, p = qPart(q, i)
 println("Vector r: ", r)
@@ -183,6 +230,42 @@ function bbP2dot2(i, j, a2pr, s1pr, s2pr,tn, q, qd, par)
     return P21, P22
 end
 
+function bbP2fxc(i, j, s1pr, s2pr, d,tn, q, qd, par)
+    # Assuming par is a structure or a dictionary with the following keys.
+    nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
+    E11=[1 0 0;0 0 0;0 0 0]
+    r1, p1 = qPart(q, i)
+    xr1, xp1 = qPart(qd, i)
+    A1 = ATran(p1)
+    BT1 = BTran(p1, s1pr)
+    BT1x = BTran(xp1, s1pr)
+    a1 = (xr1' + xp1' * BT1')
+    a1E11 = a1 * E11
+    P21 = zeros(1, 7)
+    P22 = zeros(1, 7)
+
+    if j == 0
+        d12 = s2pr - r1 - A1 * s1pr
+        P21 = hcat(a1, a1 * BT1 - d12' * BT1x)
+    elseif j >= 1
+        r2, p2 = qPart(q, j)
+        xr2, xp2 = qPart(qd, j)
+        A2 = ATran(p2)
+        BT2 = BTran(p2, s2pr)
+        BT2x = BTran(xp2, s2pr)
+        a2 = (xr2' + xp2' * BT2')
+        a2E11 = a2 * E11
+        d12 = r2 + A2 * s2pr - r1 - A1 * s1pr
+        P21 = hcat((a1E11 - a2E11), (a1E11 - a2E11) * BT1 - d12' *E11* BT1x)
+        P22 = hcat((a2E11 - a1E11), (a2E11 - a1E11) * BT2 + d12' *E11* BT2x)
+    end
+    # Special
+    println("xr1=",xr1')
+    P21 = hcat(xr1[1],zeros(1, 6))
+    return P21, P22
+end
+
+
 
 function bbP2RotDr(i, j, vx1pr, vy1pr, vx2pr, q, qd, par)
     # Unpacking parameters
@@ -234,7 +317,6 @@ function bbP3dist(i, j, s1pr, s2pr, d, tn, q, qd, par)
     BT1 = BTran(p1, s1pr)
     BT1d = BTran(p1d, s1pr)
     a1bar = r1d + BT1 * p1d
-
     if j == 0
         P31 = hcat(p1d' * BT1d', 2 * (a1bar)' * BT1d + p1d' * BT1d' * BT1)
         P32 = zeros(1, 7)
@@ -306,7 +388,38 @@ function bbP3dot2(i, j, a2pr, s1pr, s2pr, tn, q, qd, par)
     return P31, P32
 end
 
+function bbP3fxc(i, j, s1pr, s2pr, d, tn, q, qd, par)
+    I3 = Matrix{Float64}(I, 3, 3)  # Equivalent of eye(3) in MATLAB
 
+    r1, p1 = qPart(q, i)
+    r1d, p1d = qPart(qd, i)
+    BT1 = BTran(p1, s1pr)
+    BT1d = BTran(p1d, s1pr)
+    a1bar = r1d + BT1 * p1d
+    E11=[1 0 0;0 0 0;0 0 0]
+    a1barE11=a1bar'*E11
+    if j == 0
+        P31 = hcat(p1d' * BT1d'*E11, 2 * (a1barE11) * BT1d + p1d'* BT1d' *E11 * BT1)
+        P32 = zeros(1, 7)
+    end
+
+    if j >= 1
+        r2, p2 = qPart(q, j)
+        r2d, p2d = qPart(qd, j)
+        BT2 = BTran(p2, s2pr)
+        BT2d = BTran(p2d, s2pr)
+        a2bar = r2d + BT2 * p2d
+        a2barE11=a2bar*E11
+        P31 = hcat(p1d' * BT1d'*E11 - p2d' * BT2d'*E11, 2 * (a1barE11 - a2barE11)' * BT1d +
+               (p1d' * BT1d' - p2d' * BT2d') *E11* BT1)
+        P32 = hcat(p2d' * BT2d'*E11 - p1d' * BT1d'*E11, 2 * (a2barE11 - a1barE11)' * BT2d +
+               (p2d'* BT2d' - p1d' * BT1d') *E11 * BT2)
+    end
+    # speical
+    P31 = zeros(1, 7)
+    println("nnnnoooo")
+    return P31, P32
+end
 
 function bbP4dist(i, j, s1pr, s2pr, d, tn, q, etak, par)
     I3 = Matrix{Float64}(I, 3, 3)
@@ -367,8 +480,8 @@ function bbP4dot2(i, j, a2pr, s1pr, s2pr, tn, q, etak, par)
     P412 = zeros(7, 7)
     P422 = zeros(7, 7)
 
-    if j == 0
-        P411 = etak * vcat(zeros(3, 7), hcat(zeros(4, 3), KEval(s1pr, a2pr)))
+    if j == 0 #to ch8
+        P411 = -etak * vcat(zeros(3, 7), hcat(zeros(4, 3), KEval(s1pr, a2pr)))
     elseif j >= 1
         r2, p2 = qPart(q, j)
         A2 = ATran(p2)
@@ -376,14 +489,40 @@ function bbP4dot2(i, j, a2pr, s1pr, s2pr, tn, q, etak, par)
         BT2s2 = BTran(p2, s2pr)
         d12 = r2 + A2 * s2pr - r1 - A1 * s1pr
         e = KEval(s2pr, A2 * a2pr) + KEval(a2pr, d12) + BT2s2' * BT2a2 + BT2a2' * BT2s2
-        P411 = -etak * vcat(zeros(3, 7), hcat(zeros(4, 3),KEval(a2pr, A2 * a2pr)))
+        P411 = -etak * vcat(zeros(3, 7), hcat(zeros(4, 3),KEval(s1pr, A2 * a2pr)))#to ch8
         P412 = -etak * vcat(hcat(zeros(3, 3), BT2a2), hcat(zeros(4, 3), BT1' * BT2a2))
         P422 = etak * vcat(hcat(zeros(3, 3), BT2a2), hcat(BT2a2', e))
     end
 
     return P411, P412, P422
 end
+function bbP4fxc(i, j, s1pr, s2pr, d, tn, q, etak, par)
+    I3 = Matrix{Float64}(I, 3, 3)
 
+    r1, p1 = qPart(q, i)
+    BT1 = BTran(p1, s1pr)
+    A1 = ATran(p1)
+    E11=[1 0 0;0 0 0;0 0 0]
+    if j == 0
+        d12 = s2pr - r1 - A1 * s1pr
+        P411 = etak * vcat(hcat(I3*E11,E11*BT1), hcat(BT1'*E11,BT1'*E11 * BT1 - KEval(s1pr, E11*d12)))
+        P412 = zeros(7, 7)
+        P422 = zeros(7, 7)
+    end
+
+    if j >= 1
+        r2, p2 = qPart(q, j)
+        BT2 = BTran(p2, s2pr)
+        A2 = ATran(p2)
+        d12 = r2 + A2 * s2pr - r1 - A1 * s1pr
+        P411 = etak * vcat(hcat(I3*E11, E11*BT1), hcat(BT1'*E11, BT1' *E11* BT1 - KEval(s1pr, E11*d12)))
+        P412 = -etak * vcat(hcat(I3*E11, E11*BT2), hcat(BT1'*E11, BT1' *E11* BT2))
+        P422 = etak * vcat(hcat(I3*E11, E11*BT2), hcat(BT2'*E11, BT2' *E11* BT2 + KEval(s2pr, E11*d12))    )
+    end
+    P411 = etak * vcat(hcat(I3,zeros(3,4)), hcat(zeros(4,3),zeros(4,4)))
+    println("nnnnoooo4")
+    return P411, P412, P422
+end
 
 function bbP4sph(i, j, s1pr, s2pr, tn, q, etak, par)
     # P412 is identically zero
@@ -429,7 +568,7 @@ function bbPhiqdist(i, j, s1pr, s2pr, d,tn, q, par)
     A1 = ATran(p1)
     if j == 0
         d12 = s2pr - r1 - A1 * s1pr
-        Phiq1 = -d12' * [I3, BTran(p1, s1pr)]
+        Phiq1 = -d12' * hcat(I3, BTran(p1, s1pr))
         Phiq2 = zeros(1, 7)
     else
         r2, p2 = qPart(q, j)
@@ -440,6 +579,49 @@ function bbPhiqdist(i, j, s1pr, s2pr, d,tn, q, par)
     end
     return Phiq1, Phiq2
 end
+
+function bbPhifxc(i, j, s1pr, s2pr, d,tn, q, par)
+    nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
+    r1, p1 = qPart(q, i)
+    A1 = ATran(p1)
+    E11=[1 0 0;0 0 0;0 0 0]
+    if j == 0
+        d12 = s2pr - r1 - A1 * s1pr
+        Phi = ((d12'*E11* d12) - d^2) / 2
+    else
+        r2, p2 = qPart(q, j)
+        A2 = ATran(p2)
+        d12 = r2 + A2 * s2pr - r1 - A1 * s1pr
+        Phi = ((d12'*E11* d12)  - d^2) / 2
+    end
+    Phi=(r1[1]*r1[1]-1) / 2
+    return Phi
+end
+
+function bbPhiqfxc(i, j, s1pr, s2pr, d,tn, q, par)
+    nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
+    I3 = Matrix{Float64}(I, 3, 3) # Identity matrix in Julia
+    r1, p1 = qPart(q, i)
+    A1 = ATran(p1)
+    E11=[1 0 0;0 0 0;0 0 0]
+    if j == 0
+        d12 = s2pr - r1 - A1 * s1pr
+        Phiq1 = -d12' * E11*hcat(I3, BTran(p1, s1pr))
+        Phiq2 = zeros(1, 7)
+    else
+        r2, p2 = qPart(q, j)
+        A2 = ATran(p2)
+        d12 = r2 + A2 * s2pr - r1 - A1 * s1pr
+        Phiq1 = -d12' * E11* hcat(I3, BTran(p1, s1pr))
+        Phiq2 = d12' * E11* hcat(I3, BTran(p2, s2pr))
+    end
+    #println("bbPhiqfxc-r1",r1)
+    Phiq1 = r1'*hcat(I3, zeros(3,4))
+    Phiq1 = hcat(r1[1],zeros(1,2), zeros(1,4))
+    println("bbPhiqfxc",Phiq1)
+    return Phiq1, Phiq2
+end
+
 function bbPhidot1(i, j, a1pr, a2pr,tn, q, par)
     # Unpack parameters
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
@@ -769,7 +951,7 @@ function QAEval(tn, q, qd, SMDT, STSDAT, par)
 
     QA = zeros(ngc)
 
-    # Account for gravitational force in negative z direction
+    # Account for gravitational force in negative y direction
     for i in 1:nb
         mi = SMDT[1, i]
         QAGi = vcat(-mi * g * uy, zeros(4))
@@ -946,6 +1128,7 @@ function ODEfunct(tn, q, qd, SMDT, STSDAT, SJDT, par)
     ECond = cond(E)
 
     x = E \ RHS
+    #x = pinv(E) * RHS
 
     qdd = zeros(ngc)
     for i in 1:ngc
@@ -1036,7 +1219,18 @@ function P3Eval(tn, q, qd, SJDT, par)
         
             m += 5
         end
-                
+        # fxc Constraint
+        if SJDT[1, k] == 1010
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            P31, P32 = bbP3fxc(i, j, s1pr, s2pr, d, tn, q, qd, par)
+            P3 = add_constraint!(P3, P31, m, 7 * (i - 1))
+
+            if j >= 1
+                P3 = add_constraint!(P3, P32, m, 7 * (j - 1))
+            end
+
+            m = m + 1
+        end                
 
         k = k + 1
     end
@@ -1167,6 +1361,26 @@ function P2Eval(tn,q,qd,SJDT,par)
                 P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
             end
             m += 1
+        elseif constraintType == 1010  
+            # Check if the constraint type is a Distance Constraint
+            # Extract parameters for the Distance Constraint
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+
+            # Compute P21 and P22 for the Distance Constraint
+            P21, P22 = bbP2fxc(i, j, s1pr, s2pr, d,tn, q, qd, par)
+
+            # Add P21 to P2 at the appropriate location
+            P2 = add_constraint!(P2, P21, m, 7 * (i - 1))
+
+            # If j is not zero, add P22 as well
+            if j >= 1
+                P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
+            end
+
+            # Increment the constraint counter
+            m += 1
+        # Check if the constraint type is a Spherical Constraint
+          
         end
 
 
@@ -1285,7 +1499,23 @@ function P4Eval(tn, q, eta, SJDT, par)
         
             m += 5
         end
-        
+        # fxc Constraint
+        if SJDT[1, k] == 1010
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            etak = eta[m + 1]
+
+            P411, P412, P422 = bbP4fxc(i, j, s1pr, s2pr, d, tn, q, etak, par)
+            P4 = add_constraint!(P4, P411, 7 * (i - 1), 7 * (i - 1))
+
+            if j >= 1
+                P421 = transpose(P412)
+                P4 = add_constraint!(P4, P412, 7 * (i - 1), 7 * (j - 1))
+                P4 = add_constraint!(P4, P421, 7 * (j - 1), 7 * (i - 1))
+                P4 = add_constraint!(P4, P422, 7 * (j - 1), 7 * (j - 1))
+            end
+
+            m += 1
+        end        
         
         k += 1
     end
@@ -1420,7 +1650,13 @@ function PhiEval(tn, q, SJDT, par)
             Phi = add_constraint!(Phi, Phik, m, 0)
             m += 1
         end
-
+        # fxc Constraint
+        if SJDT[1, k] == 1010
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            Phik = bbPhifxc(i, j, s1pr, s2pr, d,tn, q, par)
+            Phi = add_constraint!(Phi, Phik, m, 0)
+            m += 1
+        end
         # ... (Continue with the rest of the constraints as per the given code)
 
         k += 1
@@ -1540,7 +1776,19 @@ function PhiqEval(tn, q, SJDT, par)
         end
 
         # ... (Continue with the rest of the constraints as per the given code)
+        # fxc Constraint
+        if SJDT[1, k] == 1010
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
 
+            Phiq1, Phiq2 = bbPhiqfxc(i, j, s1pr, s2pr, d,tn, q, par)
+            Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
+
+            if j >= 1
+                Phiq = add_constraint!(Phiq, Phiq2, m, 7*(j-1))
+            end
+
+            m += 1
+        end
         k += 1
     end
 
@@ -1553,6 +1801,11 @@ function PhiqEval(tn, q, SJDT, par)
         m += 1
         i += 1
     end
+
+    # Convert to DataFrame
+    df = DataFrame(Phiq, :auto)
+    # Write to CSV
+    CSV.write("Phiq.csv", df)
 
     return Phiq
 end
@@ -1598,8 +1851,6 @@ function RotDrPart(k, SJDT)
 
     return i, j, vx1pr, vy1pr, vx2pr
 end
-
-# You would need to implement or provide the equivalent methods such as parPart, DistPart, Add, bbPhiqdist, qPart, etc.
 
 
 end # module mathfunction

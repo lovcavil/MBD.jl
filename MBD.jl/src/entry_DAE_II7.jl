@@ -1,6 +1,8 @@
 include("mathfunction_II7.jl")
 include("AppData_II7.jl")
 include("ImplicitIndex1.jl")
+include("ImplicitIndex3.jl")
+include("ExplicitNystrom4.jl")
 include("ExplicitRKFN45.jl")
 using LinearAlgebra
 using Plots
@@ -9,6 +11,7 @@ using IterativeRefinement
 
 
 function run(app)
+    println("app", app)
     # Integration and Error Control Parameters
     intol = 10^-6     # Tolerance in solving discretized equations of motion
     Atol = 10^-5      # Absolute error tolerance for variable step methods
@@ -20,29 +23,30 @@ function run(app)
     VelConstrMax = 10^-4  # Limit on velocity constraint error
     AccConstrMax = 10^20  # Limit on acceleration constraint error
 
-    h0 = 0.1       # Initial time step
+    h0 = 0.001       # Initial time step
     h = h0
     hmax = 0.1
     hvar = 1          # hvar=1, variable h; hvar=2, constant h
 
     constrcor = 2     # constrcor=1, correct; constrcor=2, no correct
-
+    Initialpositioncorrection = 0
     tfinal = 5
 
     # Integration Method
-    integ = 1         # integ=1-ImplicitIndex1; alpha=0-Trapezoidal; alpha<0-HHT
+    integ = 5     
+    # integ=1-ImplicitIndex1; alpha=0-Trapezoidal; alpha<0-HHT
     # integ=2-ImplicitIndex2; alpha=0-Trapezoidal; alpha<0-HHT
     # integ=3-ImplicitIndex3; alpha=0-Trapezoidal; alpha<0-HHT
     # integ=4-ExplicitNystrom4Index1
     # integ=5-ExplicitRKFN45Index1
 
-    alpha = 0         # Enter -1/3 <= alpha < 0 for HHT
+    alpha = -0.3         # Enter -1/3 <= alpha < 0 for HHT
     # alpha not used in ExplicitNystrom4 and ExplicitRKFN45
 
     g = 9.81
 
-    # Application Data
-    #app = 2           # Select application:
+    # Application Data         
+    # Select application:
     # 1: Pendulum, Spherical to Ground
     # 2: Spin Stabilized Top, Spherical to Ground
     # 3: One Body Pendulum, Dist. to Ground
@@ -84,30 +88,59 @@ function run(app)
     Pnu = hcat(zeros(nc, ngc), Inc)
     err = intol + 1
     i = 0
-    while err > intol
-        Phiq = mathfunction.PhiqEval(0, q + z, SJDT, par)
-        Resid = vcat(z + Phiq' * nu, mathfunction.PhiEval(0, q + z, SJDT, par))
-        # Concatenate the matrices
-        JJ = vcat(hcat(I + mathfunction.P4Eval(0, q + z, nu, SJDT, par), Phiq'), hcat(Phiq, zeros(nc, nc)))
-        
-        # Convert to DataFrame
-        #df = DataFrame(JJ, :auto)
+    w=[]
+    if Initialpositioncorrection == 1
+        println("Initial Position Correction",
+                "\n--------------------------")
+        while err > intol
+            println("-------------i=", i)
+            Phiq = mathfunction.PhiqEval(0, q + z, SJDT, par)
+            Resid = vcat(z + Phiq' * nu, mathfunction.PhiEval(0, q + z, SJDT, par))
+            # Concatenate the matrices
+            JJ = vcat(hcat(I + mathfunction.P4Eval(0, q + z, nu, SJDT, par), Phiq'), hcat(Phiq, zeros(nc, nc)))
 
-        # Write to CSV
-        #CSV.write("output.csv", df)
-        w = -JJ \ Resid
-        #w, bnorm, bcomp = rfldiv(-JJ,Resid)
-        #w = -inv(JJ) * Resid
-        z += Pz * w
-        nu += Pnu * w
-        err = norm(Resid)
-        i += 1
+            # Convert to DataFrame
+            df = DataFrame(JJ, :auto)
+
+            # Write to CSV
+            CSV.write("JJ.csv", df)
+            # Convert to DataFrame
+            #df = DataFrame(Resid, :auto)
+
+            # Write to CSV
+            #CSV.write("Resid.csv", df)
+            #w = -JJ \ Resid
+
+            # if norm(Resid)!=0
+            #     #w = -JJ \ Resid
+            # end
+            #w, bnorm, bcomp = rfldiv(-JJ,Resid)
+            #w = -pinv(JJ) * Resid
+
+            println("rank", rank(JJ))
+            try
+                println("normal")
+                w = -JJ \ Resid
+                #w = -(JJ+0.01*I) \ Resid
+            catch e
+                println(e)
+                println("w = -(JJ+0.0001*I) \\ Resid")
+                w = -(JJ + 0.01 * I) \ Resid
+            end
+
+            z += Pz * w
+            nu += Pnu * w
+            err = norm(Resid)
+            println("err", err)
+            i += 1
+        end
+        q += z
     end
-    q += z
+    
 
     # Initial velocity correction
     Phiq = mathfunction.PhiqEval(0, q, SJDT, par)
-    mu = (Phiq * Phiq') \ (Phiq * qd)
+    mu = pinv(Phiq * Phiq') * (Phiq * qd)
     delqd = -Phiq' * mu
     qd += delqd
 
@@ -124,7 +157,8 @@ function run(app)
     EE = vcat(hcat(M, Phiq'), hcat(Phiq, zeros(nc, nc)))
     EEcond = cond(EE)
     RHS = [QA + S; -Gam]
-    x = EE \ RHS
+    #x = EE \ RHS
+    x = pinv(EE) * RHS
     Pqdd = hcat(I, zeros(ngc, nc))
     PLam = hcat(zeros(nc, ngc), I)
     qdd = Pqdd * x
@@ -132,6 +166,10 @@ function run(app)
 
     Qdd[:, 1] = qdd
     LLam[:, 1] = Lam
+
+    println("cor-q0",q)
+    println("cor-qd0",qd)
+
 
     # Initialize Data For Integration
     n = 1
@@ -160,10 +198,10 @@ function run(app)
     x2 = [0.0]
     y2 = [0.0]
     z2 = [0.0]
-    corvelrpt=[0.0]
+    corvelrpt = [0.0]
     corposrpt = [0]
-    corpositer= [0] 
-    ECondrpt=[0.0]
+    corpositer = [0]
+    ECondrpt = [0.0]
     # Integration
     while t[n] < tfinal
 
@@ -189,7 +227,6 @@ function run(app)
 
         # Integration
         if integ == 1
-
             q, qd, qdd, Lam, R1n, Jiter, JCond, h, nch, Err = ImplicitIndex1(n, tn, Q, Qd, Qdd, LLam, h, hmax, SMDT, STSDAT, SJDT, par, alpha, nch)
 
             push!(R1Normrpt, R1n)
@@ -198,24 +235,40 @@ function run(app)
             push!(Errrpt, Err)
             push!(hrpt, h)
         end
-        if integ == 4
-            q, qd, qdd, Lam, ECond = ExplicitNystrom4(n, tn, Q, Qd, h, SMDT, STSDAT, SJDT, par)
-            push!(ECondrpt,ECond)
-        end
-        
-        if integ == 5
-            q, qd, qdd, ECond, h, nch = ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
-            push!(ECondrpt,ECond)
+
+        if integ == 3
+            q,qd,qdd,Lam,R1n,Jiter,JCond,h,nch,Err,hopt =ImplicitIndex3(n,tn,Q,Qd,Qdd,LLam,h,hmax,SMDT,STSDAT,SJDT,par,alpha,nch);
+            
+            push!(R1Normrpt, R1n)
+            push!(Jiterrpt, Jiter)
+            push!(JCondrpt, JCond)
+            push!(Errrpt, Err)
             push!(hrpt, h)
         end
-        
+
+        if integ == 4
+            q, qd, qdd, Lam, ECond = ExplicitNystrom4(n, tn, Q, Qd, h, SMDT, STSDAT, SJDT, par)
+            push!(ECondrpt, ECond)
+        end
+
+        if integ == 5
+            q, qd, qdd, ECond, h, nch = ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
+            println("q",q)
+            push!(ECondrpt, ECond)
+            push!(hrpt, h)
+        end
+        if integ == 10001
+            q, qd, qdd, ECond, h, nch = ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
+            push!(ECondrpt, ECond)
+            push!(hrpt, h)
+        end
 
         # Corrections if velocity or position errors exceed tolerances
         if constrcor == 1
 
             Phiq = mathfunction.PhiqEval(tn, q, SJDT, par)
             if norm(Phiq * qd) > VelConstrMax
-                mu = (Phiq * Phiq') \ Phiq * qd
+                mu = pinv(Phiq * Phiq') * (Phiq * qd)
                 delqd = -Phiq' * mu
                 qd += delqd
                 corvel += 1
@@ -233,7 +286,7 @@ function run(app)
                     Phiq = mathfunction.PhiqEval(tn, q + z, SJDT, par)
                     Resid = vcat(z + Phiq' * nu, mathfunction.PhiEval(tn, q + z, SJDT, par))
                     JJ = vcat(hcat(I + mathfunction.P4Eval(0, q + z, nu, SJDT, par), Phiq'), hcat(Phiq, zeros(nc, nc)))
-                    w = -JJ \ Resid
+                    w = -pinv(JJ) * Resid
                     z += Pz * w
                     nu += Pnu * w
                     err = norm(Resid)
@@ -242,7 +295,7 @@ function run(app)
                 q += z
                 corpos += 1
                 push!(corposrpt, corpos)
-                push!(corpositer,i)
+                push!(corpositer, i)
             end
 
         end
@@ -289,7 +342,7 @@ function run(app)
         TE[n] = KE[n] + PE[n] + SE[n]
 
         # Data of Interest (Enter for each application)
-        if app == 1||app == 101 ||app == 102 ||app == 103||app==201
+        if app == 1 || app == 101 || app == 102 || app == 103 || app == 201|| app == 204|| app == 205|| app == 206|| app == 207
             push!(x1, q[1])
             push!(y1, q[2])
             push!(z1, q[3])
@@ -303,7 +356,7 @@ function run(app)
             push!(z2, q[10])
             # println(tn)
         end
-        if app == 202||app == 203
+        if app == 202 || app == 203
             push!(x1, q[1])
             push!(y1, q[2])
             push!(z1, q[3])
@@ -321,13 +374,42 @@ function run(app)
         push!(AccConstrNorm, norm(Phiq * qdd + Gam))
 
     end
-    if app == 1||app == 101 ||app == 102 ||app == 103||app == 201
+    Plots.default(show = true)
+    if app == 1 || app == 101 || app == 102 || app == 103 || app == 201|| app == 204|| app == 205|| app == 206|| app == 207
         #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
         #display(f)
+        f0 = plot(t, x1, label="x", title="Output Data Plot", xlabel="t", ylabel="x", legend=:topright)
+        display(f0)
         f1 = plot(t, y1, label="y", title="Output Data Plot", xlabel="t", ylabel="y", legend=:topright)
         display(f1)
         f2 = plot(t, z1, label="z", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
         display(f2)
+        f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
+        display(f)
+        f3 = plot(t, TE, label="TE", title="Output Data Plot", xlabel="t", ylabel="TE", legend=:topright)
+        display(f3)
+        f4 = plot(t, TE, label="TE", title="Output Data Plot", xlabel="t", ylabel="TE", legend=:topright)
+        display(f4)
+        f5 = plot(t, PosConstrNorm, label="PosConstrNorm", title="Output Data Plot", xlabel="t", ylabel="PosConstrNorm", legend=:topright)
+        display(f5)
+        f6 = plot(t, VelConstrNorm, label="VelConstrNorm", title="Output Data Plot", xlabel="t", ylabel="VelConstrNorm", legend=:topright)
+        display(f6)
+        f7 = plot(t, AccConstrNorm, label="AccConstrNorm", title="Output Data Plot", xlabel="t", ylabel="AccConstrNorm", legend=:topright)
+        display(f7)
+        #f8 = plot(t, Errrpt, label="Errrpt", title="Output Data Plot", xlabel="t", ylabel="Errrpt", legend=:topright)
+        #display(f8)
+        #f9 = plot(t, hrpt, label="hrpt", title="Output Data Plot", xlabel="t", ylabel="hrpt", legend=:topright)
+        #display(f9)
+        println(corvelrpt)
+        println(corposrpt)
+        println(corpositer)
+
+        #f41 = plot(t, corvelrpt, label="corvelrpt", title="Output Data Plot", xlabel="t", ylabel="corvelrpt", legend=:topright)
+        #display(f41)
+        #f42 = plot(t, corposrpt, label="corposrpt", title="Output Data Plot", xlabel="t", ylabel="corposrpt", legend=:topright)
+        #display(f42)
+        #f43 = plot(t, corpositer, label="corpositer", title="Output Data Plot", xlabel="t", ylabel="corpositer", legend=:topright)
+        #display(f43)
     end
     if app == 6
         #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
@@ -335,15 +417,13 @@ function run(app)
         f1 = plot(t, z2, label="z2", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
         display(f1)
     end
-    if app == 202||app == 203
+    if app == 202 || app == 203
         f5 = plot(t, x1, label="x", title="Output Data Plot", xlabel="t", ylabel="x", legend=:topright)
         display(f5)
         f6 = plot(t, y1, label="y", title="Output Data Plot", xlabel="t", ylabel="y", legend=:topright)
         display(f6)
         f7 = plot(t, z1, label="z", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
         display(f7)
-
-
         f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
         display(f)
         f2 = plot3d(x2, y2, z2, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot2")
@@ -355,4 +435,4 @@ end
 #run(101)
 #run(102)
 #run(103)
-run(203)
+run(207)
