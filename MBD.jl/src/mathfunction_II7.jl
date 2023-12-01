@@ -72,10 +72,6 @@ end
 function atilde(a)
     return [0 -a[3] a[2]; a[3] 0 -a[1]; -a[2] a[1] 0]
 end
-#= a = [1, 2, 3]
-atilde_matrix = atilde(a)
-println(atilde_matrix) =#
-
 
 function ATran(p)
     e0 = p[1]
@@ -260,7 +256,7 @@ function bbP2fxc(i, j, s1pr, s2pr, d,tn, q, qd, par)
         P22 = hcat((a2E11 - a1E11), (a2E11 - a1E11) * BT2 + d12' *E11* BT2x)
     end
     # Special
-    println("xr1=",xr1')
+    #println("xr1=",xr1')
     P21 = hcat(xr1[1],zeros(1, 6))
     return P21, P22
 end
@@ -519,7 +515,7 @@ function bbP4fxc(i, j, s1pr, s2pr, d, tn, q, etak, par)
         P412 = -etak * vcat(hcat(I3*E11, E11*BT2), hcat(BT1'*E11, BT1' *E11* BT2))
         P422 = etak * vcat(hcat(I3*E11, E11*BT2), hcat(BT2'*E11, BT2' *E11* BT2 + KEval(s2pr, E11*d12))    )
     end
-    P411 = etak * vcat(hcat(I3,zeros(3,4)), hcat(zeros(4,3),zeros(4,4)))
+    P411 = etak * vcat(hcat(I3*E11,zeros(3,4)), hcat(zeros(4,3),- KEval(s1pr,  hcat(r1[1],zeros(1,2)) )))
     println("nnnnoooo4")
     return P411, P412, P422
 end
@@ -618,7 +614,7 @@ function bbPhiqfxc(i, j, s1pr, s2pr, d,tn, q, par)
     #println("bbPhiqfxc-r1",r1)
     Phiq1 = r1'*hcat(I3, zeros(3,4))
     Phiq1 = hcat(r1[1],zeros(1,2), zeros(1,4))
-    println("bbPhiqfxc",Phiq1)
+    #println("bbPhiqfxc",Phiq1)
     return Phiq1, Phiq2
 end
 

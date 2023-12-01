@@ -9,9 +9,8 @@ using Plots
 using CSV, DataFrames
 using IterativeRefinement
 
-
 function run(app)
-    println("app", app)
+    #println("app", app)
     # Integration and Error Control Parameters
     intol = 10^-6     # Tolerance in solving discretized equations of motion
     Atol = 10^-5      # Absolute error tolerance for variable step methods
@@ -30,7 +29,7 @@ function run(app)
 
     constrcor = 2     # constrcor=1, correct; constrcor=2, no correct
     Initialpositioncorrection = 0
-    tfinal = 5
+    tfinal = 10
 
     # Integration Method
     integ = 5     
@@ -138,11 +137,11 @@ function run(app)
     end
     
 
-    # Initial velocity correction
-    Phiq = mathfunction.PhiqEval(0, q, SJDT, par)
-    mu = pinv(Phiq * Phiq') * (Phiq * qd)
-    delqd = -Phiq' * mu
-    qd += delqd
+    # # Initial velocity correction
+    # Phiq = mathfunction.PhiqEval(0, q, SJDT, par)
+    # mu = pinv(Phiq * Phiq') * (Phiq * qd)
+    # delqd = -Phiq' * mu
+    # qd += delqd
 
     Q[:, 1] = q
     Qd[:, 1] = qd
@@ -253,7 +252,7 @@ function run(app)
 
         if integ == 5
             q, qd, qdd, ECond, h, nch = ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
-            println("q",q)
+            #println("q",q)
             push!(ECondrpt, ECond)
             push!(hrpt, h)
         end
@@ -364,6 +363,16 @@ function run(app)
             push!(y2, q[9])
             push!(z2, q[10])
         end
+        target=[]
+        if app == 301
+            temp=[0.0]
+            # Using an array of arrays
+            target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp]
+            flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
+            # Apply the function
+            process_vector(q, flags, target, append_to_vector)
+        end
+
         # Calculate constraint error
         Phi = mathfunction.PhiEval(tn, q, SJDT, par)
         Phiq = mathfunction.PhiqEval(tn, q, SJDT, par)
@@ -429,10 +438,22 @@ function run(app)
         f2 = plot3d(x2, y2, z2, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot2")
         display(f2)
     end
+
+    if app==301
+        #plot()  # Initialize an empty plot
+        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(x2, "x2"),(y2,"y2"),(z2,"z2"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        for (vec, label) in target
+            f=plot(t, vec, label=label, title="Output Data Plot", xlabel="t", ylabel=label, legend=:topright)  # Add each vector to the plot
+            display(f)
+        end
+        #display(plot())  # Display the plot
+        f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
+        display(f)
+    end
 end
 
 
 #run(101)
 #run(102)
 #run(103)
-run(207)
+run(301)

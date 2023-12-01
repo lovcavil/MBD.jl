@@ -1,6 +1,6 @@
 using LinearAlgebra
 include("mathfunction_II7.jl")
-export AppData_II7
+export AppData_II7,process_vector
 
 struct AppDataStruct
     name::String
@@ -447,5 +447,123 @@ function AppData_II7(app)
         println("q0",q0)
         println("qd0",qd0)
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0
+    
+    
+    end
+
+    if app == 301  # single Pendulum+plainer
+        apps = model_sph_plain()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
+    end
+
+end
+
+function println0(apps::AppDataStruct)
+    println("App Data")
+    println("========")
+    println("Name: ", apps.name)
+    println("Number of Bodies (nb): ", apps.nb)
+    println("Number of Geometric Constraints (ngc): ", apps.ngc)
+    println("Number of Holonomic Constraints (nh): ", apps.nh)
+    println("Number of Constraints (nc): ", apps.nc)
+    println("\nSJDT :")
+    for row in eachrow(apps.SJDT')
+        println(row)
+    end
+    println("\nSMDT :")
+    println(apps.SMDT)
+    println("\nInitial (q0): ", apps.q0)
+    println("Initial Derivative (qd0): ", apps.qd0)
+    println("========")
+end
+
+function process_vector(q::Vector, flags::Vector{Bool}, target::Vector{Vector{Float64}}, func::Function)
+    # Ensure `q` and `flags` have the same length
+    # if length(q) != length(flags)
+    #     error("Vectors 'q' and 'flags' must be of the same length.")
+    # end
+
+    # Process elements of `q` based on `flags`
+    for (i, flag) in enumerate(flags)
+        if flag && i <= length(target)
+            func(target[i], q[i])
+        end
     end
 end
+
+# Function to append `element` of `q` to the `target_vector`
+function append_to_vector(target_vector::Vector{Float64}, element)
+    push!(target_vector, element)
+end
+
+function plot_vector(target_vector::Vector{Float64}, element)
+    push!(target_vector, element)
+end
+
+
+function model_sph_plain()
+    nb = 2         # Number of bodies
+    ngc = 7 * nb    # Number of generalized coordinates
+    nh = 3        # Number of holonomic constraints
+    nhc = 9       # Number of holonomic constraint equations
+    nc = nhc + nb   # Number of constraint equations
+    NTSDA = 0       # Number of TSDA force elements
+
+    zer = zeros(3)
+    
+    sphroot1=[0,0,0]
+    sphroot2=[2,0,0]
+    sphroot3=[1,1,0]
+    r10_ = [0.5, 0.5, 0]
+    r20_ = [1.5, 0.5, 0]
+    r00_ = [0, 0, 0]
+    # SJDT[:, k] = [t, i, j, sipr, sjpr, d, uxipr, uzipr, uxjpr, uzjpr]
+    # k = joint number; t = joint type (1=Dist, 2=Sph, 3=Cyl, 4=Rev, 5=Tran, 
+    # 6=Univ, 7=Strut, 8=Rev-Sph); i & j = bodies connected, i > 0; 1010=fxc
+    # si & sjpr = vectors to Pi & Pj; d = dist.; uxipr, uzipr, uxjpr, uzjpr
+    SJDT = Array{Any}(undef, 22, nh)
+    si1pr1 = ((sphroot1-r10_)'*[1  0  0;0  -1  0;0  0  1])'
+    sj2pr1 = ((sphroot1-r00_)'*[1  0  0;0  -1  0;0  0  1])'
+    SJDT[:, 1] = Any[2, 1, 0, si1pr1..., sj2pr1..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
+
+    si1pr2 = ((sphroot2-r20_)'*[1  0  0;0  -1  0;0  0  1])'
+    sj2pr2 = ((sphroot2-r00_)'*[1  0  0;0  -1  0;0  0  1])'
+    SJDT[:, 2] = Any[2, 2, 0, si1pr2..., sj2pr2..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
+
+    si1pr3 = ((sphroot3-r10_)'*[1  0  0;0  -1  0;0  0  1])'
+    sj2pr3 = ((sphroot3-r20_)'*[1  0  0;0  -1  0;0  0  1])'
+    SJDT[:, 3] = Any[2, 1, 2, si1pr3..., sj2pr3..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
+
+    #SJDT[:, 4] = Any[1010, 1, 0, si3pr..., sj3pr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
+    # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
+    # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
+    SMDT = hcat(vcat(30, 90, 90, 90),vcat(30, 90, 90, 90))
+    #SMDT = hcat(vcat(30, 90, 90, 90))
+    # STSDAT(12, 1): TSDA Data Table
+    STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
+
+    # Initial generalized coordinates
+
+    p10 = [0, 1, 0, 0]
+    p20 = [0, 1, 0, 0]
+    q0 = [r10_..., p10...,r20_..., p20...]
+    #q0 = [r10_..., p10...]
+    omeg1pr0 = [0, 0, 0]
+    r1d0 = mathfunction.ATran(p10) * mathfunction.atil(omeg1pr0) * si1pr1
+    p1d0 = 0.5 * mathfunction.GEval(p10)' * omeg1pr0
+    r2d0 = mathfunction.ATran(p20) * mathfunction.atil(omeg1pr0) * si1pr2
+    p2d0 = 0.5 * mathfunction.GEval(p20)' * omeg1pr0
+    #r1d0 = [0, 0, 0]
+    #r2d0 = [0, 0, 0]
+    #p1d0 = [0, 1, 0, 0]
+    #p2d0 = [0, 1, 0, 0] 
+    qd0 = [r1d0..., p1d0...,r2d0..., p2d0...]
+    #qd0 = [r1d0..., p1d0...]
+    println(qd0)
+    return AppDataStruct("model_sph_plain",nb,ngc,nh,nc,NTSDA,SJDT,SMDT,STSDAT,q0,qd0)
+end
+
+
+
