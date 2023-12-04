@@ -9,7 +9,7 @@ using Plots
 using CSV, DataFrames
 using IterativeRefinement
 
-function run(app)
+function run(app,my_p)
     #println("app", app)
     # Integration and Error Control Parameters
     intol = 10^-6     # Tolerance in solving discretized equations of motion
@@ -22,14 +22,14 @@ function run(app)
     VelConstrMax = 10^-4  # Limit on velocity constraint error
     AccConstrMax = 10^20  # Limit on acceleration constraint error
 
-    h0 = 0.001       # Initial time step
+    h0 = 0.01       # Initial time step
     h = h0
     hmax = 0.1
     hvar = 1          # hvar=1, variable h; hvar=2, constant h
-
-    constrcor = 2     # constrcor=1, correct; constrcor=2, no correct
+  
+    constrcor = 1     # constrcor=1, correct; constrcor=2, no correct
     Initialpositioncorrection = 0
-    tfinal = 10
+    tfinal = 0.9
 
     # Integration Method
     integ = 5     
@@ -56,8 +56,8 @@ function run(app)
 
     # Application Data Function
     nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(app)
-
-    par = Any[nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA]
+    
+    par = Any[nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA,my_p]
 
 
     # Initial condition calculation, if required
@@ -285,9 +285,9 @@ function run(app)
                     Phiq = mathfunction.PhiqEval(tn, q + z, SJDT, par)
                     Resid = vcat(z + Phiq' * nu, mathfunction.PhiEval(tn, q + z, SJDT, par))
                     JJ = vcat(hcat(I + mathfunction.P4Eval(0, q + z, nu, SJDT, par), Phiq'), hcat(Phiq, zeros(nc, nc)))
-                    w = -pinv(JJ) * Resid
-                    z += Pz * w
-                    nu += Pnu * w
+                    w = -inv(JJ) * Resid
+                    z += 0.5*Pz * w
+                    nu += 0.5*Pnu * w
                     err = norm(Resid)
                     i += 1
                 end
@@ -368,7 +368,19 @@ function run(app)
             temp=[0.0]
             # Using an array of arrays
             target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp]
+            target = [x1, y1, z1]
             flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
+            flags = [true, true, true,false,false,false,false]
+            # Apply the function
+            process_vector(q, flags, target, append_to_vector)
+        end
+        if app == 302
+            temp=[0.0]
+            # Using an array of arrays
+            target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp]
+            target = [x1, y1, z1]
+            flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
+            flags = [true, true, true,false,false,false,false]
             # Apply the function
             process_vector(q, flags, target, append_to_vector)
         end
@@ -438,17 +450,99 @@ function run(app)
         f2 = plot3d(x2, y2, z2, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot2")
         display(f2)
     end
-
+    
     if app==301
+        # Sample dictionary
+        my_dict = par[11]
+
+        # Initialize an empty string
+        concatenated_string = ""
+
+        # Iterate over the values in the dictionary
+        for value in values(my_dict)
+            # Concatenate each value to the string
+            concatenated_string *= string(value)
+        end
+
+        # Display the concatenated string
+        println(concatenated_string)  # Output will be "12.02.0"
+        folder_path = concatenated_string
+        mkdir(folder_path)
+        
         #plot()  # Initialize an empty plot
         target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(x2, "x2"),(y2,"y2"),(z2,"z2"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        pyplot()
         for (vec, label) in target
-            f=plot(t, vec, label=label, title="Output Data Plot", xlabel="t", ylabel=label, legend=:topright)  # Add each vector to the plot
-            display(f)
+            #f=plot(t, vec, label=label, title="Output Data Plot", xlabel="t", ylabel=label, legend=:topright)  # Add each vector to the plot
+            #display(f)
+            filename = "$label.png"
+            #savefig(f,joinpath(folder_path, filename))
         end
         #display(plot())  # Display the plot
-        f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
-        display(f)
+        #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
+        #display(f)
+        filename = "3d.png"
+        #savefig(f,joinpath(folder_path, filename))
+
+
+
+        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,PosConstrNorm=PosConstrNorm,
+        VelConstrNorm=VelConstrNorm,AccConstrNorm=AccConstrNorm)
+        filename="data.csv"
+
+        CSV.write(joinpath(folder_path, filename), df)
+        
+
+
+    end
+
+    if app==302
+        # Sample dictionary
+        my_dict = par[11]
+
+        # Initialize an empty string
+        concatenated_string = ""
+
+        # Iterate over the values in the dictionary
+        for value in values(my_dict)
+            # Concatenate each value to the string
+            concatenated_string *= string(value)
+        end
+
+        # Display the concatenated string
+        println(concatenated_string)  # Output will be "12.02.0"
+        folder_path = concatenated_string
+        if !isdir(folder_path)
+            mkdir(folder_path)
+        end
+        
+        #plot()  # Initialize an empty plot
+        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(x2, "x2"),(y2,"y2"),(z2,"z2"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        pyplot()
+        for (vec, label) in target
+            #f=plot(t, vec, label=label, title="Output Data Plot", xlabel="t", ylabel=label, legend=:topright)  # Add each vector to the plot
+            #display(f)
+            filename = "$label.png"
+            #savefig(f,joinpath(folder_path, filename))
+        end
+        #display(plot())  # Display the plot
+        #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
+        #display(f)
+        filename = "3d.png"
+        #savefig(f,joinpath(folder_path, filename))
+
+
+
+        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,PosConstrNorm=PosConstrNorm,
+        VelConstrNorm=VelConstrNorm,AccConstrNorm=AccConstrNorm)
+        filename="data.csv"
+
+        CSV.write(joinpath(folder_path, filename), df)
+        
+
+
     end
 end
 
@@ -456,4 +550,6 @@ end
 #run(101)
 #run(102)
 #run(103)
-run(301)
+#run(301)
+my_p = Dict("p1" => 1, "p2" => 1,"p3" => 1, "p4" => 1)
+run(302, my_p)  # Call function from file_b.jl
