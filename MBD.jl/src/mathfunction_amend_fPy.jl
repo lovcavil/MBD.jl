@@ -23,7 +23,7 @@ function bbPhify(i, j, s1pr, s2pr, d,tn, q, par)
     flag1=par[11]["p1"]
     d1 = ( r1 + A1 * s1pr)
     Phi=(d1[2]*d1[2]-d^2) / 2
-    println("Ahh Phi")
+    #println("Ahh Phi")
     return Phi
 end
 
@@ -175,7 +175,7 @@ function bbP4fy(i, j, s1pr, s2pr, d, tn, q, etak, par)
     # P411 = etak * vcat(hcat(I3*E22,zeros(3,4)), hcat(zeros(4,3),- KEval(s1pr,  hcat(0,r1[2],zeros(1,1)) )))
     # P412 = zeros(7, 7)
     # P422 = zeros(7, 7)
-    println("nnnnoooo4")
+    #println("nnnnoooo4")
     return P411, P412, P422
 end
 

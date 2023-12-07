@@ -5,6 +5,7 @@ using LinearAlgebra
 using BlockDiagonals
 using CSV, DataFrames
 include("mathfunction_amend_fPy.jl")
+include("mathfunction_amend_fPz.jl")
 export add_constraint!
 export atilde
 export ATran,BTran,qPart,bbP2dist,bbP2dot1,bbP2dot2,bbP2RotDr,bbP2sph
@@ -1405,6 +1406,24 @@ function P2Eval(tn,q,qd,SJDT,par)
 
             # Increment the constraint counter
             m += 1
+        elseif constraintType == 1030  
+            # Check if the constraint type is a Distance Constraint
+            # Extract parameters for the Distance Constraint
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+
+            # Compute P21 and P22 for the Distance Constraint
+            P21, P22 = bbP2fz(i, j, s1pr, s2pr, d,tn, q, qd, par)
+
+            # Add P21 to P2 at the appropriate location
+            P2 = add_constraint!(P2, P21, m, 7 * (i - 1))
+
+            # If j is not zero, add P22 as well
+            if j >= 1
+                P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
+            end
+
+            # Increment the constraint counter
+            m += 1    
         # Check if the constraint type is a Spherical Constraint
           
         end
@@ -1557,7 +1576,23 @@ function P4Eval(tn, q, eta, SJDT, par)
             end
 
             m += 1
-        end    
+        end 
+        if SJDT[1, k] == 1030
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            etak = eta[m + 1]
+
+            P411, P412, P422 = bbP4fz(i, j, s1pr, s2pr, d, tn, q, etak, par)
+            P4 = add_constraint!(P4, P411, 7 * (i - 1), 7 * (i - 1))
+
+            if j >= 1
+                P421 = transpose(P412)
+                P4 = add_constraint!(P4, P412, 7 * (i - 1), 7 * (j - 1))
+                P4 = add_constraint!(P4, P421, 7 * (j - 1), 7 * (i - 1))
+                P4 = add_constraint!(P4, P422, 7 * (j - 1), 7 * (j - 1))
+            end
+
+            m += 1
+        end       
         k += 1
     end
 
@@ -1704,6 +1739,12 @@ function PhiEval(tn, q, SJDT, par)
             Phi = add_constraint!(Phi, Phik, m, 0)
             m += 1
         end
+        if SJDT[1, k] == 1030
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            Phik = bbPhifz(i, j, s1pr, s2pr, d,tn, q, par)
+            Phi = add_constraint!(Phi, Phik, m, 0)
+            m += 1
+        end
         # ... (Continue with the rest of the constraints as per the given code)
 
         k += 1
@@ -1840,6 +1881,18 @@ function PhiqEval(tn, q, SJDT, par)
             i, j, s1pr, s2pr, d = DistPart(k, SJDT)
 
             Phiq1, Phiq2 = bbPhiqfy(i, j, s1pr, s2pr, d,tn, q, par)
+            Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
+
+            if j >= 1
+                Phiq = add_constraint!(Phiq, Phiq2, m, 7*(j-1))
+            end
+
+            m += 1
+        end
+        if SJDT[1, k] == 1030
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+
+            Phiq1, Phiq2 = bbPhiqfz(i, j, s1pr, s2pr, d,tn, q, par)
             Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
 
             if j >= 1

@@ -464,6 +464,12 @@ function AppData_II7(app)
         return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
          apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
     end
+    if app == 303  # space 4
+        apps = model_cr()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
+    end
 end
 
 function println0(apps::AppDataStruct)
@@ -576,5 +582,76 @@ function model_sph_plain()
     return AppDataStruct("model_sph_plain",nb,ngc,nh,nc,NTSDA,SJDT,SMDT,STSDAT,q0,qd0)
 end
 
+function model_cr()
+    nb = 3         # Number of bodies
+    ngc = 7 * nb    # Number of generalized coordinates
+    nh = 2   +2     # Number of holonomic constraints
+    nhc = 6   +10    # Number of holonomic constraint equations
+    nc = nhc + nb   # Number of constraint equations
+    NTSDA = 0       # Number of TSDA force elements
 
+    ux = [1; 0; 0]
+    uy = [0; 1; 0]
+    uz = [0; 0; 1]
+    zer = zeros(3)
+    revroot=[0.0, 0.1, 0.12]
+    sphroot1=[0.0, 0.1, 0.2]
+    sphroot2=[0.2, 0.0, 0.0]
+    tranroot=[0.2, 0.0, 0.0]
+
+    r1 = [0.0, 0.1, 0.12]
+    r2 =   [0.1,	0.05,	0.1]
+    r3 =    [0.2,0,0]
+    r0 = [0  , 0  , 0]
+    # SJDT[:, k] = [t, i, j, sipr, sjpr, d, uxipr, uzipr, uxjpr, uzjpr]
+    # k = joint number; t = joint type (1=Dist, 2=Sph, 3=Cyl, 4=Rev, 5=Tran, 
+    # 6=Univ, 7=Strut, 8=Rev-Sph); i & j = bodies connected, i > 0; 1010=fxc
+    # si & sjpr = vectors to Pi & Pj; d = dist.; uxipr, uzipr, uxjpr, uzjpr
+    SJDT = Array{Any}(undef, 22, nh)
+    si1pr1 = (revroot-r1)
+    sj2pr1 = (revroot-r0)
+    SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, uz..., ux..., uz..., ux...]  
+
+    si1pr2 = (sphroot1-r1)
+    sj2pr2 = (sphroot1-r2)
+    SJDT[:, 2] = Any[2, 1, 2, si1pr2..., sj2pr2..., 0, ux..., uz..., ux..., uz...]  
+
+    si1pr3 = (sphroot2-r2)
+    sj2pr3 = (sphroot2-r3)
+    SJDT[:, 3] = Any[2, 2, 3, si1pr3..., sj2pr3..., 0, ux..., uz..., ux..., uz...]  
+    si1pr4 = (tranroot-r3)
+    sj2pr4 = (tranroot-r0)
+    SJDT[:, 4] = Any[5, 3, 0, si1pr4..., sj2pr4..., 0, uz..., ux..., uz..., ux...]  
+
+    # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
+    # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
+    SMDT = hcat(vcat(30, 90, 90, 90),vcat(30, 90, 90, 90),vcat(30, 90, 90, 90))
+    #SMDT = hcat(vcat(30, 90, 90, 90))
+    # STSDAT(12, 1): TSDA Data Table
+    STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
+
+    # Initial generalized coordinates
+
+    p10 = [1, 0, 0, 0]
+    p20 = [1, 0, 0, 0]
+    p30 = [1, 0, 0, 0]
+
+    q0 = [r1..., p10...,r2..., p20...,r3..., p30...]
+
+    omeg1pr0 = [1, 0, 0]
+    r1d0 = mathfunction.ATran(p10) * mathfunction.atil(omeg1pr0) * si1pr1
+    p1d0 = 0.5 * mathfunction.GEval(p10)' * omeg1pr0
+    #r2d0 = mathfunction.ATran(p20) * mathfunction.atil(omeg1pr0) * si1pr3
+    #p2d0 = 0.5 * mathfunction.GEval(p20)' * omeg1pr0
+    #r1d0 = [0, 0, 0]
+    r2d0 = [0, 0, 0]
+    r3d0 = [0.03, 0, 0]
+    #p1d0 = [0, 0, 0, 0]
+    p2d0 = [0, 0, 0, 0]
+    p3d0 = [0, 0, 0, 0] 
+    qd0 = [r1d0..., p1d0...,r2d0..., p2d0...,r3d0..., p3d0...]
+
+    println(qd0)
+    return AppDataStruct("model_cr",nb,ngc,nh,nc,NTSDA,SJDT,SMDT,STSDAT,q0,qd0)
+end
 

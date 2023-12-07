@@ -23,13 +23,10 @@ function ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
     qdd=[]
     ECond=[]
     Err = 2  # Criteria for accepting time step
-    if n==5
-        mmm=0
-    end
+
 
     while Err > 1
         # Calculate stage variables
-        # Replace ODEfunct with the equivalent Julia function
         qdd, Lam, ECond = mathfunction.ODEfunct(tnm, qnm, qdnm, SMDT, STSDAT, SJDT, par)
         k1 = qdd
         q2p = qnm + c[2] * h * qdnm

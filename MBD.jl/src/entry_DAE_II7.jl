@@ -22,14 +22,14 @@ function run(app,my_p)
     VelConstrMax = 10^-4  # Limit on velocity constraint error
     AccConstrMax = 10^20  # Limit on acceleration constraint error
 
-    h0 = 0.01       # Initial time step
+    h0 = 0.001       # Initial time step
     h = h0
-    hmax = 0.1
+    hmax = 0.01
     hvar = 1          # hvar=1, variable h; hvar=2, constant h
   
     constrcor = 1     # constrcor=1, correct; constrcor=2, no correct
-    Initialpositioncorrection = 0
-    tfinal = 0.9
+    Initialpositioncorrection = 1
+    tfinal = 5
 
     # Integration Method
     integ = 5     
@@ -136,7 +136,6 @@ function run(app,my_p)
         q += z
     end
     
-
     # # Initial velocity correction
     # Phiq = mathfunction.PhiqEval(0, q, SJDT, par)
     # mu = pinv(Phiq * Phiq') * (Phiq * qd)
@@ -197,6 +196,10 @@ function run(app,my_p)
     x2 = [0.0]
     y2 = [0.0]
     z2 = [0.0]
+    x3 = [0.0]
+    y3 = [0.0]
+    z3 = [0.0]
+    xd3 = [0.0]
     corvelrpt = [0.0]
     corposrpt = [0]
     corpositer = [0]
@@ -256,11 +259,6 @@ function run(app,my_p)
             push!(ECondrpt, ECond)
             push!(hrpt, h)
         end
-        if integ == 10001
-            q, qd, qdd, ECond, h, nch = ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
-            push!(ECondrpt, ECond)
-            push!(hrpt, h)
-        end
 
         # Corrections if velocity or position errors exceed tolerances
         if constrcor == 1
@@ -272,8 +270,9 @@ function run(app,my_p)
                 qd += delqd
                 corvel += 1
                 push!(corvelrpt, corvel)
+                
             end
-
+            println("1norm(Phiq * qd)",norm(Phiq * qd))
             if norm(mathfunction.PhiEval(tn, q, SJDT, par)) > PosConstrMax
                 z = zeros(ngc)
                 nu = zeros(nc)
@@ -296,7 +295,17 @@ function run(app,my_p)
                 push!(corposrpt, corpos)
                 push!(corpositer, i)
             end
+            if norm(Phiq * qd) > VelConstrMax
+                mu = pinv(Phiq * Phiq') * (Phiq * qd)
+                delqd = -Phiq' * mu
+                qd += delqd
+                corvel += 1
+                push!(corvelrpt, corvel)
 
+                
+            end
+            Phiq = mathfunction.PhiqEval(tn, q, SJDT, par)
+            println("2norm(Phiq * qd)",norm(Phiq * qd))
         end
         # End Corrections
 
@@ -374,22 +383,31 @@ function run(app,my_p)
             # Apply the function
             process_vector(q, flags, target, append_to_vector)
         end
-        if app == 302
+        if app == 302||app==303
             temp=[0.0]
             # Using an array of arrays
-            target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp]
-            target = [x1, y1, z1]
-            flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
-            flags = [true, true, true,false,false,false,false]
+            target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp, x3, y3, z3,temp,temp,temp,temp]
+
+            flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false,true, true, true,false,false,false,false]
+
             # Apply the function
             process_vector(q, flags, target, append_to_vector)
+
+            target = [temp, temp, temp,temp,temp,temp,temp, temp, temp, temp,temp,temp,temp,temp, xd3, temp, temp,temp,temp,temp,temp]
+
+            flags = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,true, false, false,false,false,false,false]
+
+            # Apply the function
+            process_vector(qd, flags, target, append_to_vector)
+
+
         end
 
         # Calculate constraint error
         Phi = mathfunction.PhiEval(tn, q, SJDT, par)
         Phiq = mathfunction.PhiqEval(tn, q, SJDT, par)
         Gam = mathfunction.GamEval(tn, q, qd, SJDT, par)
-
+        #println("3norm(Phiq * qd)",norm(Phiq * qd))
         push!(PosConstrNorm, norm(Phi))
         push!(VelConstrNorm, norm(Phiq * qd))
         push!(AccConstrNorm, norm(Phiq * qdd + Gam))
@@ -497,7 +515,7 @@ function run(app,my_p)
 
     end
 
-    if app==302
+    if app==302||app==303
         # Sample dictionary
         my_dict = par[11]
 
@@ -518,8 +536,9 @@ function run(app,my_p)
         end
         
         #plot()  # Initialize an empty plot
-        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(x2, "x2"),(y2,"y2"),(z2,"z2"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
-        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(x2, "x2"),(y2,"y2"),(z2,"z2"),(x3, "x3"),(y3,"y3"),(z3,"z3"),
+        (PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        
         pyplot()
         for (vec, label) in target
             #f=plot(t, vec, label=label, title="Output Data Plot", xlabel="t", ylabel=label, legend=:topright)  # Add each vector to the plot
@@ -533,23 +552,19 @@ function run(app,my_p)
         filename = "3d.png"
         #savefig(f,joinpath(folder_path, filename))
 
-
-
-        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,PosConstrNorm=PosConstrNorm,
+        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,x2= x2,y2=y2,z2=z2,x3= x3,y3=y3,z3=z3,xd3=xd3,PosConstrNorm=PosConstrNorm,
         VelConstrNorm=VelConstrNorm,AccConstrNorm=AccConstrNorm)
         filename="data.csv"
 
         CSV.write(joinpath(folder_path, filename), df)
         
-
-
     end
 end
-
 
 #run(101)
 #run(102)
 #run(103)
 #run(301)
 my_p = Dict("p1" => 1, "p2" => 1,"p3" => 1, "p4" => 1)
-run(302, my_p)  # Call function from file_b.jl
+#run(302, my_p)  # Call function from file_b.jl
+run(303, my_p)  # Call function from file_b.jl
