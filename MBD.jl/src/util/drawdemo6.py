@@ -2,29 +2,30 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Read the CSV file
-df = pd.read_csv("1111/data.csv")
-
+#df = pd.read_csv("1111/data.csv")
+df = pd.read_csv("demo6/data.csv")
+dfmt = pd.read_csv("demo6/t.csv")
+dfmQ = pd.read_csv("demo6/Q.csv")
 # Plotting
-def d(label,pname):
+def draw_jl_res(label,pname):
     plt.figure(figsize=(16,10))
     plt.plot(df['t'],df[label], label=label)
     plt.savefig(f"{pname}/{label}.png")  # Saves the plot as a PNG file
     plt.close()  # Close the plot to free up memory
     
-    
-# Define the possible values for each part
-values = ['1', '-1']
-values = ['1']
-# Use list comprehension to generate all combinations
-combinations = [v1 + v2 + v3 + v4 for v1 in values for v2 in values for v3 in values for v4 in values]
+def draw_m_res(label,pname):
+    plt.figure(figsize=(16,10))
+    plt.plot(dfmt['t'],dfmQ[label], label=label)
+    plt.savefig(f"{pname}/{label}m.png")  # Saves the plot as a PNG file
+    plt.close()  # Close the plot to free up memory
 
-# Print all combinations
-for combination in combinations:
-
-    for label in df.columns:
-        d(label,combination)
+for label in df.columns:
+    draw_jl_res(label,"demo6")
+for label in dfmQ.columns:
+    draw_m_res(label,"demo6")    
 pass
-pname="1111"
+
+pname="demo6"
 fig=plt.figure(figsize=(16,10))
 ax = fig.add_subplot(111, projection='3d')
 
@@ -52,16 +53,12 @@ ax.set_zlabel('Z axis')
 
 plt.savefig(f"{pname}/3d2.png")  # Saves the plot as a PNG file
 plt.close()  # Close the plot to free up memory
+
+#_______________________________________________________________________
 fig=plt.figure(figsize=(16,10))
-ax = fig.add_subplot(111, projection='3d')
+plt.plot(df['t'],df['z2'], label='z2-jl')
+plt.plot(dfmt['t'],dfmQ['z2'], label='z2-mat')
+plt.legend()
+plt.savefig(f"{pname}/compare-z2.png")  # Saves the plot as a PNG file
+plt.close()
 
-# Plot the 3D curve
-ax.plot(df['x3'], df['y3'], df['z3'])
-
-# Set labels
-ax.set_xlabel('X axis')
-ax.set_ylabel('Y axis')
-ax.set_zlabel('Z axis')
-
-plt.savefig(f"{pname}/3d3.png")  # Saves the plot as a PNG file
-plt.close()  # Close the plot to free up memory

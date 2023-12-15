@@ -11,7 +11,7 @@ function run()
     l2 = 220
     w = 5 * π
     dt = 0.001
-    t = 0:dt:5
+    t = 0:dt:0.01
     n = length(t)
     q = zeros(5, n)
     q_v = zeros(5, n)
@@ -69,7 +69,10 @@ function run()
     f = plot!(t, q[2, :], lw=2, ls=:solid, color=:green, label="y")
     f = plot!(t, q[3, :], lw=2, ls=:solid, color=:blue, label="z")
     display(f)
-    f2 = f = plot(t, PosConstrNorm[1, :], lw=3, ls=:solid, color=:blue, label="PosConstrNorm")
+    f = plot(t, q[4, :], lw=2, ls=:solid, color=:blue, label="l1")
+    f = plot!(t, q[5, :], lw=2, ls=:solid, color=:blue, label="l2")
+    display(f)
+    f2 =  plot(t, PosConstrNorm[1, :], lw=3, ls=:solid, color=:blue, label="PosConstrNorm")
     display(f2)
     println("end2")
 end

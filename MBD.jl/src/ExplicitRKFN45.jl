@@ -71,7 +71,7 @@ function ExplicitRKFN45(n, tn, Q, Qd, h, hmax, par, SMDT, STSDAT, SJDT, nch)
             Er += (qddiff[i] / sciqd)^2  # Velocity error component
         end
         Err = sqrt(Er / (2 * ngc))  # Factor of 2 removed in pos err control
-        println("Err=",Err)
+        #println("Err=",Err)
         hopt = h * (1 / Err)^(1 / 6)
         
         # Change step size

@@ -517,7 +517,7 @@ function bbP4fxc(i, j, s1pr, s2pr, d, tn, q, etak, par)
         P412 = -etak * vcat(hcat(I3*E11, E11*BT2), hcat(BT1'*E11, BT1' *E11* BT2))
         P422 = etak * vcat(hcat(I3*E11, E11*BT2), hcat(BT2'*E11, BT2' *E11* BT2 + KEval(s2pr, E11*d12))    )
     end
-    P411 = etak * vcat(hcat(I3*E11,zeros(3,4)), hcat(zeros(4,3),- KEval(s1pr,  hcat(r1[1],zeros(1,2)) )))
+    P411 = etak * vcat(hcat(I3*E11,zeros(3,4)), hcat(zeros(4,3),- KEval(s1pr,  vcat(r1[1],zeros(2,1)) )))
     println("nnnnoooo4")
     return P411, P412, P422
 end

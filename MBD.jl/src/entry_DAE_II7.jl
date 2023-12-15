@@ -29,7 +29,7 @@ function run(app,my_p)
   
     constrcor = 1     # constrcor=1, correct; constrcor=2, no correct
     Initialpositioncorrection = 1
-    tfinal = 5
+    tfinal = 5.5
 
     # Integration Method
     integ = 5     
@@ -199,7 +199,17 @@ function run(app,my_p)
     x3 = [0.0]
     y3 = [0.0]
     z3 = [0.0]
+
+    xd1 = [0.0]
+    yd1 = [0.0]
+    zd1 = [0.0]
+    xd2 = [0.0]
+    yd2 = [0.0]
+    zd2 = [0.0]
     xd3 = [0.0]
+    yd3 = [0.0]
+    zd3 = [0.0]
+
     corvelrpt = [0.0]
     corposrpt = [0]
     corpositer = [0]
@@ -272,7 +282,7 @@ function run(app,my_p)
                 push!(corvelrpt, corvel)
                 
             end
-            println("1norm(Phiq * qd)",norm(Phiq * qd))
+            # println("1norm(Phiq * qd)",norm(Phiq * qd))
             if norm(mathfunction.PhiEval(tn, q, SJDT, par)) > PosConstrMax
                 z = zeros(ngc)
                 nu = zeros(nc)
@@ -305,7 +315,7 @@ function run(app,my_p)
                 
             end
             Phiq = mathfunction.PhiqEval(tn, q, SJDT, par)
-            println("2norm(Phiq * qd)",norm(Phiq * qd))
+            # println("2norm(Phiq * qd)",norm(Phiq * qd))
         end
         # End Corrections
 
@@ -361,8 +371,13 @@ function run(app,my_p)
             push!(z1, q[3])
         end
         if app == 6
+            push!(x1, q[1])
+            push!(y1, q[2])
+            push!(z1, q[3])
+            push!(x2, q[8])
+            push!(y2, q[9])
             push!(z2, q[10])
-            # println(tn)
+
         end
         if app == 202 || app == 203
             push!(x1, q[1])
@@ -383,7 +398,7 @@ function run(app,my_p)
             # Apply the function
             process_vector(q, flags, target, append_to_vector)
         end
-        if app == 302||app==303
+        if app == 302||app==303||app==304||app==305
             temp=[0.0]
             # Using an array of arrays
             target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp, x3, y3, z3,temp,temp,temp,temp]
@@ -392,15 +407,13 @@ function run(app,my_p)
 
             # Apply the function
             process_vector(q, flags, target, append_to_vector)
+           
+            target = [xd1, yd1, zd1,temp,temp,temp,temp,     xd2, yd2, zd2,temp,temp,temp,temp,       xd3, yd3, zd3,temp,temp,temp,temp]
 
-            target = [temp, temp, temp,temp,temp,temp,temp, temp, temp, temp,temp,temp,temp,temp, xd3, temp, temp,temp,temp,temp,temp]
-
-            flags = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,true, false, false,false,false,false,false]
+            flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false,true, true, true,false,false,false,false]
 
             # Apply the function
             process_vector(qd, flags, target, append_to_vector)
-
-
         end
 
         # Calculate constraint error
@@ -451,10 +464,36 @@ function run(app,my_p)
         #display(f43)
     end
     if app == 6
-        #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
-        #display(f)
         f1 = plot(t, z2, label="z2", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
         display(f1)
+
+        folder_path = "demo6"
+        if !isdir(folder_path)
+            mkdir(folder_path)
+        end
+        #plot()  # Initialize an empty plot
+        target = [(x1, "x1"), (y1, "y1"), (z1, "z1"), (x2, "x2"), (y2, "y2"), (z2, "z2"),
+            (PosConstrNorm, "PosConstrNorm"), (VelConstrNorm, "VelConstrNorm"), (AccConstrNorm, "AccConstrNorm")]
+
+        df = DataFrame(t=t, x1=x1, y1=y1, z1=z1, x2=x2, y2=y2, z2=z2, PosConstrNorm=PosConstrNorm,
+            VelConstrNorm=VelConstrNorm, AccConstrNorm=AccConstrNorm)
+        filename = "data.csv"
+        CSV.write(joinpath(folder_path, filename), df)
+    end
+    if app == 205
+
+        folder_path = "demo205"
+        if !isdir(folder_path)
+            mkdir(folder_path)
+        end
+        #plot()  # Initialize an empty plot
+        target = [(x1, "x1"), (y1, "y1"), (z1, "z1"), 
+            (PosConstrNorm, "PosConstrNorm"), (VelConstrNorm, "VelConstrNorm"), (AccConstrNorm, "AccConstrNorm")]
+
+        df = DataFrame(t=t, x1=x1, y1=y1, z1=z1,  PosConstrNorm=PosConstrNorm,
+            VelConstrNorm=VelConstrNorm, AccConstrNorm=AccConstrNorm)
+        filename = "data.csv"
+        CSV.write(joinpath(folder_path, filename), df)
     end
     if app == 202 || app == 203
         f5 = plot(t, x1, label="x", title="Output Data Plot", xlabel="t", ylabel="x", legend=:topright)
@@ -515,7 +554,7 @@ function run(app,my_p)
 
     end
 
-    if app==302||app==303
+    if app==302||app==303||app==304||app==305
         # Sample dictionary
         my_dict = par[11]
 
@@ -552,7 +591,8 @@ function run(app,my_p)
         filename = "3d.png"
         #savefig(f,joinpath(folder_path, filename))
 
-        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,x2= x2,y2=y2,z2=z2,x3= x3,y3=y3,z3=z3,xd3=xd3,PosConstrNorm=PosConstrNorm,
+        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,x2= x2,y2=y2,z2=z2,x3= x3,y3=y3,z3=z3,
+        xd1= xd1,yd1=yd1,zd1=zd1,xd2= xd2,yd2=yd2,zd2=zd2,xd3= xd3,yd3=yd3,zd3=zd3,PosConstrNorm=PosConstrNorm,
         VelConstrNorm=VelConstrNorm,AccConstrNorm=AccConstrNorm)
         filename="data.csv"
 
@@ -567,4 +607,7 @@ end
 #run(301)
 my_p = Dict("p1" => 1, "p2" => 1,"p3" => 1, "p4" => 1)
 #run(302, my_p)  # Call function from file_b.jl
-run(303, my_p)  # Call function from file_b.jl
+#run(6, my_p)  # Call function from file_b.jl
+
+#run(303, my_p)  # Call function from file_b.jl
+run(305, my_p)  # Call function from file_b.jl

@@ -144,7 +144,7 @@ function AppData_II7(app)
             NTSDA == 0 ? zeros(12, NTSDA) : # STSDAT initialization logic here if NTSDA != 0
 
             # Initial generalized coordinates
-            r10 = [0.1, 0.12, 0]
+        r10 = [0.1, 0.12, 0]
         r1111 = [0.1, 0.12, 0]
         p10 = [1, 0, 0, 0]
         r20 = [0, 0, 0.1027]
@@ -325,7 +325,7 @@ function AppData_II7(app)
         nb = 1         # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
         nh = 2        # Number of holonomic constraints
-        nhc = 34        # Number of holonomic constraint equations
+        nhc = 4        # Number of holonomic constraint equations
         nc = nhc + nb   # Number of constraint equations
         NTSDA = 0       # Number of TSDA force elements
 
@@ -336,10 +336,10 @@ function AppData_II7(app)
         # 6=Univ, 7=Strut, 8=Rev-Sph); i & j = bodies connected, i > 0; 1010=fxc
         # si & sjpr = vectors to Pi & Pj; d = dist.; uxipr, uzipr, uxjpr, uzjpr
         SJDT = Array{Any}(undef, 22, nh)
-        si1pr = [1, 0, 1]
+        si1pr = [-1, -1, 0]
         sjpr = [0, 0, 0]
         SJDT[:, 1] = Any[2, 1, 0, si1pr..., sjpr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
-        si3pr = [-1, 0, -1]
+        si3pr = [1, 1, 0]
         sj3pr = [0, 0, 0]
         SJDT[:, 2] = Any[1010, 1, 0, si3pr..., sj3pr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
         # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
@@ -350,7 +350,7 @@ function AppData_II7(app)
         STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
 
         # Initial generalized coordinates
-        r10 = [-1, 0, -1]
+        r10 = [1, 1, 0]
         p10 = [1, zer...]
 
         #q0 = [r10..., p10...,r20..., p20...]
@@ -466,6 +466,18 @@ function AppData_II7(app)
     end
     if app == 303  # space 4
         apps = model_cr()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
+    end
+    if app == 304  # door2
+        apps = model_door_2()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
+    end
+    if app == 305  # door2
+        apps = model_door_3()
         println0(apps)
         return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
          apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
@@ -638,7 +650,7 @@ function model_cr()
 
     q0 = [r1..., p10...,r2..., p20...,r3..., p30...]
 
-    omeg1pr0 = [1, 0, 0]
+    omeg1pr0 = [3.14/4, 0, 0]
     r1d0 = mathfunction.ATran(p10) * mathfunction.atil(omeg1pr0) * si1pr1
     p1d0 = 0.5 * mathfunction.GEval(p10)' * omeg1pr0
     #r2d0 = mathfunction.ATran(p20) * mathfunction.atil(omeg1pr0) * si1pr3
