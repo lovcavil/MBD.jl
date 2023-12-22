@@ -145,7 +145,7 @@ function calculate_B(q_v, Qa)
     garma = [-q_v[1]^2 - q_v[2]^2 - q_v[3]^2, -q_v[2]^2]
     return vcat(Qa, garma)
 end
-function init_prolbem()
+function init_problem()
     q0 = [1, 1, 0, 0, 0]
     qd0 = zeros(5)
     return Problem(
@@ -160,7 +160,7 @@ end
 # Main function to run the simulation
 function main()
     params = init_params()
-    problem = init_prolbem()
+    problem = init_problem()
     q, PosConstrNorm = run_simulation(params,problem)
     plot_results(params.t, q, PosConstrNorm)
 end
@@ -196,14 +196,13 @@ function f2(out, du, u, p, t)
     params=0
 end
 
-function f1(out, du, u, p, t)
-    dq₁, dq₂, dq₃,  dv₁, dv₂, dv₃,dl₁= du
-    q₁, q₂, q₃,     v₁, v₂, v₃,l₁ = u
+function function_pendulum(out, du, u, p, t)
+    dq₁, dq₂, dq₃,dl₁,  dv₁, dv₂, dv₃ = du
+    q₁ , q₂ , q₃ , l₁,   v₁,  v₂,  v₃ = u
     params=p[1]
     problem=p[2]
     m1=params.m1 
     Qa = [0, 0, -m1 * params.g]
-
 
     ddq=[dv₁; dv₂; dv₃]
     q=[q₁; q₂; q₃]
@@ -215,12 +214,11 @@ function f1(out, du, u, p, t)
 
     res=A*vcat(ddq,l)-B
     out[1:3]=res[1:3]
-    out[7] = res[4]
+    out[4] = res[4]
 
-    out[4] = v₁ - dq₁
-    out[5] = v₂ - dq₂
-    out[6] = v₃ - dq₃
-
+    out[5] = v₁ - dq₁
+    out[6] = v₂ - dq₂
+    out[7] = v₃ - dq₃
 
 end
 
@@ -262,14 +260,12 @@ function f5(out, du, u, p, t)
     params=0
 end
 
-
-function test(du₀, u₀, out, p, t, differential_vars, eq)
-    eq(out, du₀, u₀, p, t)
-    println(out)
+function test(du₀, u₀, out, p, t, differential_vars, equation)
+    #equation(out, du₀, u₀, p, t)
+    #println(out)
     tspan = (0.0, 1.0)
 
-    prob = DAEProblem(eq, du₀, u₀, tspan, p, differential_vars=differential_vars)
-
+    prob = DAEProblem(equation, du₀, u₀, tspan, p, differential_vars=differential_vars)
 
     sol = solve(prob, IDA(), reltol=1e-9, abstol=1e-9, progress=true)
 
@@ -278,31 +274,30 @@ function test(du₀, u₀, out, p, t, differential_vars, eq)
         xaxis="Time (t)", yaxis="u(t) (in μm)")
 
     # Plot only the first 5 curves
-    for i in 1:min(4, length(sol))
+    for i in 1:min(3, length(sol))
         plot!(p, sol.t, sol[i, :], linewidth=3, label="Curve $i")
     end
 
     # Display the plot
     display(p)
-
     return sol
 end
-p=Any[init_params(),init_prolbem()]
+#p=Any[init_params(),init_prolbem()]
+p = (init_params(), init_problem())
 t=0.0
 
 
 differential_vars = [true, true,true, true,true, true, false]
-u₀ = [1.0, 0.0, 0,0.0, 0.0, 0,0.0]
-du₀ = [0.0, 0.0, 0,0.0, 0.0, -9.81,0.0]
-out=zeros(7)
-sol=test(du₀, u₀, out, p, t,differential_vars,f1)
+u₀ = [1.0, 0.0, 0.0,    0.0,    0.0, 0.0,0.0]
+du₀ = [0.0, 0.0, 0,     0.0,    0.0,0.0, -9.81]
+out=[0.0, 0.0, 0,0.0, 0.0, 0,0.0]
+sol=test(du₀, u₀, out, p, t,differential_vars,function_pendulum)
 
 # differential_vars = [true, true,true, true,true, true, false, false]
 # u₀ = [1.0, 0.0, 0,0.0, 0.0, 0,0.0, 0.0]
 # du₀ = [0.0, 0.0, 0,0.0, 0.0, -9.81,0.0, 0.0]
 # out=zeros(8)
 # test(du₀, u₀, out, p, t,differential_vars,f2)
-
 
 # differential_vars = [true, true,true, true, false]
 # du₀ = [0.0  , 0.    ,   0,  -9.81,  0]
@@ -320,5 +315,4 @@ sol=test(du₀, u₀, out, p, t,differential_vars,f1)
 # du₀ = [0.0  ,    -9.81]
 # u₀ = [1.0   ,   0.0]
 # out=zeros(2)
-
 # test(du₀, u₀, out, p, t,differential_vars,f5)

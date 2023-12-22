@@ -4,4 +4,5 @@
 # Pkg.add("Sundials")
 # using Sundials
 
-import Pkg; Pkg.add("ProgressLogging")
+#import Pkg; Pkg.add("ProgressLogging")
+import Pkg; Pkg.add("LSODA")

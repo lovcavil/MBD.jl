@@ -39,8 +39,8 @@ function AppData_II7(app)
         #SJDT = zeros(22, nh)
         SJDT = []
         SJDT = Array{Any}(undef, 22, nh)
-        sipr = uz
-        sjpr = [0, 0, -9]
+        sipr = uy
+        sjpr = [0,0 , 0]
         SJDT[:, 1] = Any[2, 1, 0, sipr..., sjpr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
 
         # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
@@ -51,7 +51,7 @@ function AppData_II7(app)
         STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
 
         # Initial generalized coordinates
-        r10 = [0, 0, -10]
+        r10 = [0, -1, 0]
         if app == 1 || app == 101
             p10 = [0, ux...]
         end
@@ -65,8 +65,7 @@ function AppData_II7(app)
             p10 = [1, zer...]
         end
         q0 = [r10..., p10...]
-        omeg1pr0 = [2, 0, 0]
-        A = mathfunction.ATran(p10)
+        omeg1pr0 = [0, 0, 0]
         r1d0 = mathfunction.ATran(p10) * mathfunction.atil(omeg1pr0) * sipr
         p1d0 = 0.5 * mathfunction.GEval(p10)' * omeg1pr0
         qd0 = [r1d0..., p1d0...]
@@ -96,7 +95,7 @@ function AppData_II7(app)
         SJDT[:, 1] = Any[2, 1, 0, -uz..., zer..., 0, zer..., zer..., zer..., zer...]  # Sph Jt - Body1 and ground
 
         # SMDT(4,nb): Mass Data Table (With diagonal inertia matrix)
-        SMDT = [30, 90, 90, 30]
+        SMDT = [30, 90, 90, 90]
 
         # STSDAT(12,1): TSDA Data Table
         if NTSDA == 0
@@ -448,7 +447,6 @@ function AppData_II7(app)
         println("q0",q0)
         println("qd0",qd0)
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0
-    
     
     end
 

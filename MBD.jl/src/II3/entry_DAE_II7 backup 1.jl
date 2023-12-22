@@ -28,8 +28,8 @@ function run(app,my_p)
     hvar = 1          # hvar=1, variable h; hvar=2, constant h
   
     constrcor = 1     # constrcor=1, correct; constrcor=2, no correct
-    Initialpositioncorrection = 0 # 1/0
-    tfinal = 5
+    Initialpositioncorrection = 1
+    tfinal = 5.5
 
     # Integration Method
     integ = 5     
@@ -167,8 +167,7 @@ function run(app,my_p)
 
     println("cor-q0",q)
     println("cor-qd0",qd)
-    println("cor-qdd0",qdd)
-    println("cor-L0",Lam)
+
 
     # Initialize Data For Integration
     n = 1
@@ -210,11 +209,7 @@ function run(app,my_p)
     xd3 = [0.0]
     yd3 = [0.0]
     zd3 = [0.0]
-    l1 = [0.0]
-    l2 = [0.0]
-    l3 = [0.0]
-    l4 = [0.0]
-    l5 = [0.0]
+
     corvelrpt = [0.0]
     corposrpt = [0]
     corpositer = [0]
@@ -396,23 +391,12 @@ function run(app,my_p)
         if app == 301
             temp=[0.0]
             # Using an array of arrays
-            #target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp]
-            q_target = [x1, y1, z1]
-            #flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
-            q_flags = [true, true, true,false,false,false,false]
+            target = [x1, y1, z1,temp,temp,temp,temp, x2, y2, z2,temp,temp,temp,temp]
+            target = [x1, y1, z1]
+            flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
+            flags = [true, true, true,false,false,false,false]
             # Apply the function
-            process_vector(q, q_flags, q_target, append_to_vector)
-
-            l_target = [l1, l2, l3,l4,l5]
-            #flags = [true, true, true,false,false,false,false,true, true, true,false,false,false,false]
-            l_flags = [true, true, true,true,true]
-            # Apply the function
-            process_vector(Lam, l_flags, l_target, append_to_vector)
-
-            qd_target = [xd1, yd1, zd1]
-            qd_flags = [true, true, true,false,false,false,false]
-            process_vector(qd, qd_flags, qd_target, append_to_vector)
-
+            process_vector(q, flags, target, append_to_vector)
         end
         if app == 302||app==303||app==304||app==305
             temp=[0.0]
@@ -442,7 +426,6 @@ function run(app,my_p)
         push!(AccConstrNorm, norm(Phiq * qdd + Gam))
 
     end
-    
     Plots.default(show = true)
     if app == 1 || app == 101 || app == 102 || app == 103 || app == 201|| app == 204|| app == 205|| app == 206|| app == 207
         #f = plot3d(x1, y1, z1, xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", title="3D Plot")
@@ -541,13 +524,11 @@ function run(app,my_p)
         # Display the concatenated string
         println(concatenated_string)  # Output will be "12.02.0"
         folder_path = concatenated_string
-        if !isdir(folder_path)
-            mkdir(folder_path)
-        end
+        mkdir(folder_path)
         
         #plot()  # Initialize an empty plot
         target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(x2, "x2"),(y2,"y2"),(z2,"z2"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
-        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(xd1, "xd1"),(yd1,"yd1"),(zd1,"zd1"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
+        target = [(x1, "x1"),(y1,"y1"),(z1,"z1"),(PosConstrNorm,"PosConstrNorm"),(VelConstrNorm,"VelConstrNorm"),(AccConstrNorm,"AccConstrNorm")]
         pyplot()
         for (vec, label) in target
             #f=plot(t, vec, label=label, title="Output Data Plot", xlabel="t", ylabel=label, legend=:topright)  # Add each vector to the plot
@@ -563,12 +544,14 @@ function run(app,my_p)
 
 
 
-        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,xd1= xd1,yd1=yd1,zd1=zd1,PosConstrNorm=PosConstrNorm,
-        VelConstrNorm=VelConstrNorm,AccConstrNorm=AccConstrNorm,L1=l1,L2=l2,L3=l3,L4=l5,L5=l5)
+        df = DataFrame(t=t,x1= x1,y1=y1,z1=z1,PosConstrNorm=PosConstrNorm,
+        VelConstrNorm=VelConstrNorm,AccConstrNorm=AccConstrNorm)
         filename="data.csv"
 
         CSV.write(joinpath(folder_path, filename), df)
         
+
+
     end
 
     if app==302||app==303||app==304||app==305
@@ -627,4 +610,4 @@ my_p = Dict("p1" => 1, "p2" => 1,"p3" => 1, "p4" => 1)
 #run(6, my_p)  # Call function from file_b.jl
 
 #run(303, my_p)  # Call function from file_b.jl
-run(201, my_p)  # Call function from file_b.jl
+run(305, my_p)  # Call function from file_b.jl

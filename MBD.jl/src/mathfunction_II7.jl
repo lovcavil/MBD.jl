@@ -10,55 +10,55 @@ export add_constraint!
 export atilde
 export ATran,BTran,qPart,bbP2dist,bbP2dot1,bbP2dot2,bbP2RotDr,bbP2sph
 export bbPhidist,bbPhiqdist,bbPhidot1,bbPhidot2,bbPhiqdot1,bbPhiqdot2
-export bbPhiqRotDr,bbPhiqsph,InitConfig,PhiqEval,PhiEval,einv
-function einv(A,b)
-    x=[]
-    # try
-    #     x = inv(A) * b  # 尝试执行此操作
-    # catch e
-    #     if e isa SingularException
-    #         println("发生1 SingularException：", e)
-    #         x = inv(A+0.01*I) * b  
-    #         # 处理 SingularException 的代码
-    #     elseif e isa MethodError
-    #         x = pinv(A) * b  # 如果上面的代码失败，执行这行代码
-    #         println("发生2 MethodError：", e)
-    #         # 处理 MethodError 的代码
-    #     else
-    #         x = pinv(A) * b  # 如果上面的代码失败，执行这行代码
-    #         println("发生异常3，错误信息：", e)  # 打印异常信息
-    #     end
+export bbPhiqRotDr,bbPhiqsph,InitConfig,PhiqEval,PhiEval#,einv
+# function einv(A,b)
+#     x=[]
+#     # try
+#     #     x = inv(A) * b  # 尝试执行此操作
+#     # catch e
+#     #     if e isa SingularException
+#     #         println("发生1 SingularException：", e)
+#     #         x = inv(A+0.01*I) * b  
+#     #         # 处理 SingularException 的代码
+#     #     elseif e isa MethodError
+#     #         x = pinv(A) * b  # 如果上面的代码失败，执行这行代码
+#     #         println("发生2 MethodError：", e)
+#     #         # 处理 MethodError 的代码
+#     #     else
+#     #         x = pinv(A) * b  # 如果上面的代码失败，执行这行代码
+#     #         println("发生异常3，错误信息：", e)  # 打印异常信息
+#     #     end
 
-    # end
+#     # end
 
-    println("rank",rank(A))
-    try
-        println("eI")
-        x = (A+0.001*I) \ b
+#     println("rank",rank(A))
+#     try
+#         println("eI")
+#         x = (A+0.001*I) \ b
         
-    catch e
-        println(e)
-        println("w = -(JJ+0.0001*I) \\ Resid")
-        x = (A+0.01*I) \ b
-    end
-    try
-        println("err_\\",norm(A \ b))
-    catch e
-    end
-    try
-        println("err_\\I",norm((A+0.001*I) \ b))
-    catch e
-    end
-    try
-        println("err_inv",norm(inv(A) * b))
-    catch e
-    end
-    try
-        println("err_pinv",norm(pinv(A) * b))
-    catch e
-    end
-    return x
-end
+#     catch e
+#         println(e)
+#         println("w = -(JJ+0.0001*I) \\ Resid")
+#         x = (A+0.01*I) \ b
+#     end
+#     try
+#         println("err_\\",norm(A \ b))
+#     catch e
+#     end
+#     try
+#         println("err_\\I",norm((A+0.001*I) \ b))
+#     catch e
+#     end
+#     try
+#         println("err_inv",norm(inv(A) * b))
+#     catch e
+#     end
+#     try
+#         println("err_pinv",norm(pinv(A) * b))
+#     catch e
+#     end
+#     return x
+# end
 # Define the function from the previous translation
 function add_constraint!(A, B, m, n)
     r, s = size(B, 1), size(B, 2)

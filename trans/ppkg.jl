@@ -2,4 +2,6 @@
 # using Pkg
 # Pkg.add("CSV")
 # Pkg.add("DataFrames")
-import Pkg; Pkg.add("Pluto")
+#import Pkg; Pkg.add("Pluto")
+import Pkg
+Pkg.add("Plots")
