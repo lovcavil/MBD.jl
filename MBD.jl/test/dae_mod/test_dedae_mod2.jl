@@ -40,6 +40,8 @@ function rhs(x,m1,q,q_v,g)
 end
 
 
+
+
 function function_pendulum(out, du, u, params, t)
     dq₁, dq₂, dq₃,dl₁,  dv₁, dv₂, dv₃ = du
     q₁ , q₂ , q₃ , l₁,   v₁,  v₂,  v₃ = u
@@ -55,9 +57,9 @@ function function_pendulum(out, du, u, params, t)
     res=rhs(x,m1,q,dq,g)
     out[1:4]=res[1:4]
 
-    out[5] = v₁ - dq₁
-    out[6] = v₂ - dq₂
-    out[7] = v₃ - dq₃
+    out[5] = (v₁ - dq₁)
+    out[6] = (v₂ - dq₂)
+    out[7] = (v₃ - dq₃)
 
 end
 
@@ -70,6 +72,29 @@ function run(out, p, t)
     prob = DAEProblem(p.equation, du₀, u₀, tspan, p, differential_vars=p.differential_vars)
 
     sol = solve(prob, IDA(), reltol=1e-9, abstol=1e-9, progress=true)
+
+    # Create a plot
+    p = plot(title="Solution to the linear ODE with a thick line",
+        xaxis="Time (t)", yaxis="u(t) (in μm)")
+
+    # Plot only the first 5 curves
+    for i in 1:min(3, length(sol))
+        plot!(p, sol.t, sol[i, :], linewidth=3, label="Curve $i")
+    end
+
+    # Display the plot
+    display(p)
+    return sol
+end
+
+function run_with_ode_solver(p, t)
+    #equation(out, du₀, u₀, p, t)
+    #println(out)
+    tspan = (0.0, 1.0)
+    u₀=p.u₀ 
+    prob = ODEProblem(odequation,  u₀, tspan, p)
+
+    sol = solve(prob, Tsit5(), reltol=1e-9, abstol=1e-9, progress=true)
 
     # Create a plot
     p = plot(title="Solution to the linear ODE with a thick line",
@@ -106,6 +131,6 @@ du₀ = [0.0, 0.0, 0,     0.0,    0.0,0.0, -9.81]
 out = [0.0, 0.0, 0,0.0, 0.0, 0,0.0]
 differential_vars= [true, true,true, true,true, true, false]
 params=init_params(du₀, u₀,differential_vars,function_pendulum)
-
 sol=run(out, params, t)
+
 

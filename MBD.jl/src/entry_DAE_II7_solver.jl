@@ -4,7 +4,7 @@ include("ImplicitIndex1.jl")
 include("ImplicitIndex3.jl")
 include("ExplicitNystrom4.jl")
 include("ExplicitRKFN45.jl")
-include("Index1Form.jl")
+include("solver/ExplicitIndex1Form.jl")
 using LinearAlgebra
 using CSV, DataFrames
 using IterativeRefinement
@@ -38,15 +38,15 @@ function run(app,my_p)
     differential_vars = vcat(repeat([true], 7*nb), repeat([false], nc), repeat([true], 7*nb))
     println("u₀=",u₀)
     println("du₀=",du₀)
-    params=init_params(du₀, u₀,differential_vars,function_pendulum,SMDT, STSDAT, SJDT, par)
-
+    #params=init_params(du₀, u₀,differential_vars,function_pendulum,SMDT, STSDAT, SJDT, par)
+    params=init_params(du₀, u₀,SMDT, STSDAT, SJDT, par)
     # Integration
 
-    sol=sol_I(out, params, t)
+    sol=sol_O(out, params, t)
     
-    # Plots.default(show = true)
-    # f0 = plot(sol, xlabel="Time", ylabel="Value", title="sss")
-    # display(f0)
+    Plots.default(show = true)
+    f0 = plot(sol, xlabel="Time", ylabel="Value", title="sss")
+    display(f0)
     col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
 
     # Create a DataFrame using the column names
@@ -63,4 +63,4 @@ end
 
 my_p = Dict("p1" => 1, "p2" => 1,"p3" => 1, "p4" => 1)
 
-run(201, my_p)  # Call function from file_b.jl
+run(205, my_p)  # Call function from file_b.jl

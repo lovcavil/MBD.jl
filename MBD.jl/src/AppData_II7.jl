@@ -474,7 +474,7 @@ function AppData_II7(app)
         return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
          apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
     end
-    if app == 305  # door2
+    if app == 305  # door3
         apps = model_door_3()
         println0(apps)
         return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
