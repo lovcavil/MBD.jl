@@ -38,7 +38,7 @@ function run(app,my_p)
     differential_vars = vcat(repeat([true], 7*nb), repeat([false], nc), repeat([true], 7*nb))
     println("u₀=",u₀)
     println("du₀=",du₀)
-    #params=init_params(du₀, u₀,differential_vars,function_pendulum,SMDT, STSDAT, SJDT, par)
+
     params=init_params(du₀, u₀,SMDT, STSDAT, SJDT, par)
     # Integration
 

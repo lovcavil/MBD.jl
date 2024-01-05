@@ -28,30 +28,31 @@ function calculate_phi(q)
 end
 
 function ode_rhs(m1,q,q_v,g)
-    A=[m1 0 0 q[1];
-       0 m1 0 q[2];
-       0 0 m1 q[3];
-       q[1] q[2] q[3] 0]
+    A=[m1 0 0           q[1] q[1];
+       0 m1 0           q[2] 0;
+       0 0 m1           q[3] 0;
+       q[1] q[2] q[3]   0 0;
+       q[1] 0 0         0 0]
     Qa = [0, 0, -m1 * params.g]
-    b=vcat(Qa, -q_v[1]^2 - q_v[2]^2 - q_v[3]^2)
+    b=vcat(Qa, -q_v[1]^2 - q_v[2]^2 - q_v[3]^2,-q_v[1]^2)
     return A\b
 end
 
 function odequation(du, u, params, t)
-    q₁ , q₂ , q₃ , l₁,   v₁,  v₂,  v₃ = u
+    q₁ , q₂ , q₃ , l₁,l₂,   v₁,  v₂,  v₃ = u
 
     m1=params.m1 
     g=params.g
     #ddq=#
     dq=[ v₁;v₂; v₃]
     q=[q₁; q₂; q₃]
-    l=[l₁]
+    l=[l₁;l₂]
 
     #x=vcat(ddq,l)
 
     res=ode_rhs(m1,q,dq,g)
-    du[5:7]=res[1:3]
-    du[4]=res[4]
+    du[6:8]=res[1:3]
+    du[4:5]=res[4:5]
     du[1] = v₁ 
     du[2] = v₂ 
     du[3] = v₃
@@ -95,8 +96,8 @@ end
 
 t=0.0
 println("START")
-u₀  = [1.0, 0.0, 0.0,    0.0,    0.0, 0.0,0.0]
-du₀ = [0.0, 0.0, 0,     0.0,    0.0,0.0, -9.81]
+u₀  = [1.0, 0.0, 0.0,    0.0,0.0,    0.0, 0.0,0.0]
+du₀ = [0.0, 0.0, 0,     0.0,0.0,    0.0,0.0, -9.81]
 
 differential_vars= [true, true,true, true,true, true, false]
 

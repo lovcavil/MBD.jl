@@ -11,7 +11,7 @@ function run()
     l2 = 220
     w = 5 * π
     dt = 0.001
-    t = 0:dt:0.01
+    t = 0:dt:1
     n = length(t)
     q = zeros(5, n)
     q_v = zeros(5, n)
