@@ -474,7 +474,7 @@ function AppData_II7(app)
         # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
         # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
         #SMDT = hcat(vcat(30, 90, 90, 30), vcat(30, 90, 90, 30))
-        SMDT = hcat(vcat(30, 1, 1, 1))
+        SMDT = hcat(vcat(30, 0.1, 0.1, 0.1))
         # STSDAT(12, 1): TSDA Data Table
         STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
 

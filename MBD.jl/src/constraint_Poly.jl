@@ -25,10 +25,17 @@ function bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     I3 = Matrix{Float64}(I, 3, 3) # Identity matrix in Julia
     E11=[1 0 0;0 0 0;0 0 0]
+    E22=[0 0 0;0 1 0;0 0 0]
+    E1=[1 0 0]
+    E2=[0 1 0]
     r1, p1 = qPart(q, i)
     A1 = ATran(p1)
     d1 = ( r1 + A1 * s1pr)
-    Phiq1 =2*d1'*E11* hcat(I3,BTran(p1,s1pr))+[0 -1 0 0 0 0 0];
+    d11 = d1[1]
+    d12 = d1[2]
+    d1q=hcat(I3,BTran(p1,s1pr))
+    # Phiq1 =2*d1'*E11*d1q +[0 -1 0 0 0 0 0];
+    Phiq1 = 2*(d11)^1*E1*d1q-E2*d1q
     Phiq2 = zeros(1, 7)
     println("phiq",Phiq1)
     return Phiq1, Phiq2
