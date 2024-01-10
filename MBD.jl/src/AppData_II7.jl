@@ -470,7 +470,7 @@ function AppData_II7(app)
         SJDT[:, 1] = Any[2, 1, 0, si1pr..., sjpr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
         si3pr = [0, 0, 0]
         sj3pr = [0, 0, 0]
-        SJDT[:, 2] = Any[1050, 1, 0, si3pr..., sj3pr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
+        SJDT[:, 2] = Any[1060, 1, 0, si3pr..., sj3pr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
         # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
         # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
         #SMDT = hcat(vcat(30, 90, 90, 30), vcat(30, 90, 90, 30))

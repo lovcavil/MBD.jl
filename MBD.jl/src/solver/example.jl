@@ -101,7 +101,7 @@ function test_EI1()
 
     # Integration P
     t=0.0
-    tspan = (0.0, 5.0)
+    tspan = (0.0, 1.1)
     println("START")
     qdd, Lam, ECond=mathfunction.ODEfunct(t, q, qd, SMDT, STSDAT, SJDT, par)
     u₀  = vcat(q,Lam,qd)

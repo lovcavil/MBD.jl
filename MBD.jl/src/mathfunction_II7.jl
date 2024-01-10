@@ -4,9 +4,10 @@ using Test
 using LinearAlgebra
 using BlockDiagonals
 using CSV, DataFrames
-include("mathfunction_amend_fPy.jl")
-include("mathfunction_amend_fPz.jl")
-include("mathfunction_amend_fP.jl")
+include("constraint_fPy.jl")
+include("constraint_fPz.jl")
+include("constraint_fP.jl")
+include("constraint_Poly.jl")
 export add_constraint!
 export atilde
 export ATran,BTran,qPart,bbP2dist,bbP2dot1,bbP2dot2,bbP2RotDr,bbP2sph
@@ -134,7 +135,6 @@ function parPart(par)
     return nb,ngc,nh,nc,g,intol,Atol,h0,hvar,NTSDA
 end
 
-    
 
 function bbP2dist(i, j, s1pr, s2pr, d,tn, q, qd, par)
     # Assuming par is a structure or a dictionary with the following keys.
@@ -1444,7 +1444,24 @@ function P2Eval(tn,q,qd,SJDT,par)
 
             # Increment the constraint counter
             m += 1      
-            
+        elseif constraintType == 1060  
+            # Check if the constraint type is a Distance Constraint
+            # Extract parameters for the Distance Constraint
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+
+            # Compute P21 and P22 for the Distance Constraint
+            P21, P22 = bbP2_Poly(i, j, s1pr, s2pr, d,tn, q, qd, par)
+
+            # Add P21 to P2 at the appropriate location
+            P2 = add_constraint!(P2, P21, m, 7 * (i - 1))
+
+            # If j is not zero, add P22 as well
+            if j >= 1
+                P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
+            end
+
+            # Increment the constraint counter
+            m += 1               
         # Check if the constraint type is a Spherical Constraint
           
         end
@@ -1773,6 +1790,12 @@ function PhiEval(tn, q, SJDT, par)
             Phi = add_constraint!(Phi, Phik, m, 0)
             m += 1
         end
+        if SJDT[1, k] == 1060
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            Phik = bbPhi_Poly(i, j, s1pr, s2pr, d,tn, q, par)
+            Phi = add_constraint!(Phi, Phik, m, 0)
+            m += 1
+        end
         # ... (Continue with the rest of the constraints as per the given code)
 
         k += 1
@@ -1942,7 +1965,18 @@ function PhiqEval(tn, q, SJDT, par)
 
             m += 1
         end
+        if SJDT[1, k] == 1060
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
 
+            Phiq1, Phiq2 = bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
+            Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
+
+            if j >= 1
+                Phiq = add_constraint!(Phiq, Phiq2, m, 7*(j-1))
+            end
+
+            m += 1
+        end
         k += 1
     end
 
