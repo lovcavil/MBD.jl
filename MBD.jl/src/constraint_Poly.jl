@@ -50,17 +50,35 @@ function bbP2_Poly(i, j, s1pr, s2pr, d,tn, q, qd, par)
     A1 = ATran(p1)
     BT1 = BTran(p1, s1pr)
     BT1x = BTran(xp1, s1pr)
-    a1 = (xr1' + xp1' * BT1')
 
     d1 = ( r1 + A1 * s1pr)
-
+    d1q=hcat(I,BTran(p1,s1pr))
     a1 = (xr1' + xp1' * BT1')
-    a1E11 = a1 * E11
 
-    P21 = hcat((a1E11), (a1E11) * BT1 + d1' *E11* BT1x)
+    # P21 = hcat((a1E11), (a1E11) * BT1 + d1' *E11* BT1x)
+    k=2
+    i=1
+    eiT, eiq = ei(i,k,d1,d1q)
+    P21 = a1*eiq+hcat([0 0 0],eiT*BT1x)
     P22 = zeros(1, 7)
     println("P2_fP")
     return P21, P22
+end
+
+function ei(i,k,d1,d1q)
+    Ei=[0 0 0]
+    if i==1
+        Ei=[1 0 0]
+    end
+    if i==2
+        Ei=[2 0 0]
+    end
+    if i==3
+        Ei=[3 0 0]
+    end
+    eiT=k*(Ei*d1)[1, 1]^(k-1)*Ei
+    eiq=Ei'*k*(k-1)*(Ei*d1)[1, 1]^(k-2)*Ei*d1q
+    return eiT, eiq
 end
 
 function bbP3_Poly(i, j, s1pr, s2pr, d, tn, q, qd, par)

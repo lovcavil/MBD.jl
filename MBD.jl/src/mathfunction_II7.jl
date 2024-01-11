@@ -1998,9 +1998,6 @@ function PhiqEval(tn, q, SJDT, par)
     return Phiq
 end
 
-
-
-
 function RevPart(k, SJDT)
     i = SJDT[2, k]
     j = SJDT[3, k]
