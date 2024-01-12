@@ -5,11 +5,7 @@ using DifferentialEquations
 using OrdinaryDiffEq
 using Sundials
 using Plots
-
-function e(out, du, u, p, t)
-    out[1] = du[1] - u[1]
-    out[2] = u[1]^2 + u[2]^2 - p
-end
+using CSV, DataFrames
 
 function test_II1()
 
@@ -89,30 +85,28 @@ function test_II3()
     return sol
 end
 
-function test_EI1()
-
+function test_EI1(;app::Int=208,tspan::Tuple{Float64, Float64}=(0.0, 5.0))
+    # CAKD initialization
+    # & Application Data Function
     h0 = 0.001       # Initial time step
     hvar=0
     g = 9.81
 
-    # Application Data Function
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(208)
+    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(app)
     par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
 
-    # Integration P
-    t=0.0
-    tspan = (0.0, 5)
-    println("START")
+    # Initialization
+    println("START of Explicit Index 1")
+
+    # Correction
+    t=tspan[1]
     qdd, Lam, ECond=mathfunction.ODEfunct(t, q, qd, SMDT, STSDAT, SJDT, par)
     u₀  = vcat(q,Lam,qd)
     du₀ = vcat(qd,zeros(nc),qdd)
 
-    differential_vars = create_bool_vector(nb, nc)
-
     p=Any[SMDT,STSDAT,SJDT,par]
     println("u₀=",u₀)
     println("du₀=",du₀)
-    println("differential_vars=",differential_vars)  # 输出 differential_vars 的值
 
     prob2 = ODEProblem(odequation, u₀,tspan, p)
 
@@ -122,17 +116,29 @@ function test_EI1()
     return sol
 end
 
+function draw(sol)
+    f01 = plot(sol, vars=1:3)
+    display(f01)
+    f02 = plot(sol, vars=8:11)
+    display(f02)
+    f03 = plot(sol, vars=13:15)
+    display(f03)
+end
 
-#sol=test_II3()
-# sol=test_II1()
-# f01 = plot(sol)
-# display(f01)
+function save(sol)
+    col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
 
-sol=test_EI1()
+    # Create a DataFrame using the column names
+    df = DataFrame()
+    df[!,"t"] = sol.t
+    df[!,col_names[1]] = sol[1, :]
+    df[!,col_names[2]] = sol[2, :]
+    df[!,col_names[3]] = sol[3, :]
 
-f02 = plot(sol, vars=1:3)
-display(f02)
-f03 = plot(sol, vars=8:11)
-display(f03)
-f04 = plot(sol, vars=13:15)
-display(f04)
+    CSV.write("jl_solver.csv", df)
+end
+
+sol=test_EI1(app=208,tspan=(0.0, 5.0))
+
+draw(sol)
+save(sol)

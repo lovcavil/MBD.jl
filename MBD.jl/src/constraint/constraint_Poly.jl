@@ -34,10 +34,14 @@ function bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
     d11 = d1[1]
     d12 = d1[2]
     d1q=hcat(I3,BTran(p1,s1pr))
-    # Phiq1 =2*d1'*E11*d1q +[0 -1 0 0 0 0 0];
-    Phiq1 = 2*(d11)^1*E1*d1q-E2*d1q
+    poly_para=[(1,-0.5),(2,+0.5),(3,1)]
+    Phiq1 = zeros(1, 7)
+    for (k,s) in poly_para
+        Phiq1=Phiq1+s*k*(d11)^(k-1)*E1*d1q
+    end
+    Phiq1 = Phiq1-E2*d1q
     Phiq2 = zeros(1, 7)
-    println("phiq",Phiq1)
+    # println("phiq",Phiq1)
     return Phiq1, Phiq2
 end
 
@@ -54,14 +58,15 @@ function bbP2_Poly(i, j, s1pr, s2pr, d,tn, q, qd, par)
     d1 = ( r1 + A1 * s1pr)
     d1q=hcat(I,BTran(p1,s1pr))
     a1 = (xr1' + xp1' * BT1')
-
-    # P21 = hcat((a1E11), (a1E11) * BT1 + d1' *E11* BT1x)
     k=2
     i=1
-    eiT, eiq = ei(i,k,d1,d1q)
-    P21 = a1*eiq+hcat([0 0 0],eiT*BT1x)
+    poly_para=[(1,-0.5),(2,+0.5),(3,1)]
+    P21 = zeros(1, 7)
+    for (k,s) in poly_para
+        eiT, eiq = ei(i,k,d1,d1q)
+        P21 = P21+ a1*s*eiq+hcat([0 0 0],s*eiT*BT1x)
+    end
     P22 = zeros(1, 7)
-    println("P2_fP")
     return P21, P22
 end
 

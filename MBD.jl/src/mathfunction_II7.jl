@@ -4,10 +4,10 @@ using Test
 using LinearAlgebra
 using BlockDiagonals
 using CSV, DataFrames
-include("constraint_fPy.jl")
-include("constraint_fPz.jl")
-include("constraint_fP.jl")
-include("constraint_Poly.jl")
+include("./constraint/constraint_fPy.jl")
+include("./constraint/constraint_fPz.jl")
+include("./constraint/constraint_fP.jl")
+include("./constraint/constraint_Poly.jl")
 export add_constraint!
 export atilde
 export ATran,BTran,qPart,bbP2dist,bbP2dot1,bbP2dot2,bbP2RotDr,bbP2sph
