@@ -2,7 +2,6 @@
 export bbP2_Poly,bbP3_Poly,bbP4_Poly,bbPhi_Poly,bbPhiq_Poly
 # cid=1060
 
-
 function bbPhi_Poly(i, j, s1pr, s2pr, d,tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     
@@ -21,7 +20,7 @@ function bbPhi_Poly(i, j, s1pr, s2pr, d,tn, q, par)
 end
 
 
-function bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
+function bbPhiq_Poly(i, j, s1pr, s2pr, guide_para,tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     I3 = Matrix{Float64}(I, 3, 3) # Identity matrix in Julia
     E11=[1 0 0;0 0 0;0 0 0]
@@ -34,9 +33,9 @@ function bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
     d11 = d1[1]
     d12 = d1[2]
     d1q=hcat(I3,BTran(p1,s1pr))
-    poly_para=[(1,-0.5),(2,+0.5),(3,1)]
+
     Phiq1 = zeros(1, 7)
-    for (k,s) in poly_para
+    for (k,s) in guide_para
         Phiq1=Phiq1+s*k*(d11)^(k-1)*E1*d1q
     end
     Phiq1 = Phiq1-E2*d1q
@@ -45,7 +44,7 @@ function bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
     return Phiq1, Phiq2
 end
 
-function bbP2_Poly(i, j, s1pr, s2pr, d,tn, q, qd, par)
+function bbP2_Poly(i, j, s1pr, s2pr, guide_para,tn, q, qd, par)
     # Assuming par is a structure or a dictionary with the following keys.
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     E11=[1 0 0;0 0 0;0 0 0]
@@ -58,11 +57,9 @@ function bbP2_Poly(i, j, s1pr, s2pr, d,tn, q, qd, par)
     d1 = ( r1 + A1 * s1pr)
     d1q=hcat(I,BTran(p1,s1pr))
     a1 = (xr1' + xp1' * BT1')
-    k=2
     i=1
-    poly_para=[(1,-0.5),(2,+0.5),(3,1)]
     P21 = zeros(1, 7)
-    for (k,s) in poly_para
+    for (k,s) in guide_para
         eiT, eiq = ei(i,k,d1,d1q)
         P21 = P21+ a1*s*eiq+hcat([0 0 0],s*eiT*BT1x)
     end

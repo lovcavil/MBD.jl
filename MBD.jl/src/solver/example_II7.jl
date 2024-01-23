@@ -1,5 +1,5 @@
 include("solver.jl")
-include("../AppData_II7.jl")
+include("../problem/AppData_II7.jl")
 using LinearAlgebra
 using DifferentialEquations
 using OrdinaryDiffEq
@@ -111,7 +111,7 @@ function test_EI1(;app::Int=208,tspan::Tuple{Float64, Float64}=(0.0, 5.0))
     prob2 = ODEProblem(odequation, u₀,tspan, p)
 
     # Integration
-    default_solve_kwargs = Dict(:alg => Tsit5(), :reltol => 1e-10, :abstol => 1e-10, :progress => true)
+    default_solve_kwargs = Dict(:alg => Tsit5(), :reltol => 1e-6, :abstol => 1e-6, :progress => true)
     sol = solve(prob2;default_solve_kwargs...)
     return sol
 end
@@ -138,7 +138,7 @@ function save(sol)
     CSV.write("jl_solver.csv", df)
 end
 
-sol=test_EI1(app=208,tspan=(0.0, 5.0))
+sol=test_EI1(app=306,tspan=(0.0, 1.0))
 
 draw(sol)
 save(sol)

@@ -1,5 +1,5 @@
 using LinearAlgebra
-include("mathfunction_II7.jl")
+include("../mathfunction_II7.jl")
 include("AppData_door.jl")
 export AppData_II7,process_vector,AppDataStruct
 
@@ -450,7 +450,7 @@ function AppData_II7(app)
     
     end
 
-    if app == 208  # single Pendulum+plainer x=1  Spherical to Ground
+    if app == 208  # single Pendulum+plainer x=1  Spherical to Ground *
         nb = 1         # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
         nh = 2        # Number of holonomic constraints
@@ -470,7 +470,7 @@ function AppData_II7(app)
         SJDT[:, 1] = Any[2, 1, 0, si1pr..., sjpr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
         si3pr = [0, 0, 0]
         sj3pr = [0, 0, 0]
-        SJDT[:, 2] = Any[1060, 1, 0, si3pr..., sj3pr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
+        SJDT[:, 2] = Any[1060, 1, 0, si3pr..., sj3pr..., [(1, -0.5), (2, 0.5), (3, 1)], zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
         # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
         # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
         #SMDT = hcat(vcat(30, 90, 90, 30), vcat(30, 90, 90, 30))
@@ -518,8 +518,14 @@ function AppData_II7(app)
         return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
          apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
     end
-    if app == 305  # door3
-        apps = model_door_3()
+    if app == 305  # door3 *
+        apps = model_door_305()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
+    end
+    if app == 306  # model_door_306_poly
+        apps = model_door_306_poly()
         println0(apps)
         return apps.nb, apps.ngc, apps.nh, apps.nc, apps.NTSDA,
          apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
@@ -536,7 +542,7 @@ function println0(apps::AppDataStruct)
     println("Number of Constraints (nc): ", apps.nc)
     println("\nSJDT :")
     for row in eachrow(apps.SJDT')
-        println(row)
+        # println(row)
     end
     println("\nSMDT :")
     println(apps.SMDT)
