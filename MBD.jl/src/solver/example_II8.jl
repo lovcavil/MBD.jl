@@ -211,9 +211,9 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     npar=0
     BCond0=0
     # app=4 initial
-    omegaz1 = [0]
-    theta1 = [0]
-    dely2pr = [0]
+    omegaz1 = [0.0]
+    theta1 = [0.0]
+    dely2pr = [0.0]
 
     while t[n] < tfinal
 
@@ -399,6 +399,7 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
         PE = vcat(PE, PEn)
         SE = vcat(SE, 0)
         TS = 1
+        SEn=0
         while TS <= NTSDA
             i, j, s1pr, s2pr, K, C, el0, F = STSDATPart(STSDAT, TS)
             r1, p1 = qPart(q, i)
@@ -412,13 +413,13 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             d12 = r2 + A2 * s2pr - r1 - A1 * s1pr
             el = sqrt(d12' * d12)
             SET = 0.5 * K * (el - el0)^2
-            SE[n] += SET
+            SEn += SET
             TS += 1
         end
-
+        SE = vcat(SE, SEn)
         TE = vcat(TE, KE[n] + PE[n] + SE[n])
         # println(n)
-        #println(tn)
+        println(tn)
         if app == 4       # Rotating Disk with Translating Body
             theta1[1] = 0
             p1 = [q[4], q[5], q[6], q[7]]
@@ -435,7 +436,10 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     end
     if app==4
         df = DataFrame()
-        df[!, "t"] = t
+        println(size(t))
+        println(size(theta1))
+        println(size(omegaz1))
+        df[!, "t"] = t[1:length(theta1)]
         df[!, "theta1"] = theta1
         df[!, "omegaz1"] = omegaz1
         CSV.write("jl_solver_app4.csv", df)
