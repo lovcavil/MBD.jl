@@ -120,6 +120,66 @@ function QAwEval(tn, q, qd, Lam, SMDT, SJDT, STSDAT, par, w, N)
             end
         end
 
+        if SJDT[1, k] == 4     # Revolute joint
+            i, j, s1pr, s2pr, vx1pr, vz1pr, vx2pr, vz2pr, a, R, mus, mud, ms, nm = RevPart(k, SJDT)
+            vy1pr = atil(vz1pr) * vx1pr
+            vy2pr = atil(vz2pr) * vx2pr
+            Lamk = Lam[ms:ms+4]
+            r1, p1 = qPart(q, i)
+            A1 = ATran(p1)
+            r1d, p1d = qPart(qd, i)
+            Ep1 = EEval(p1)
+            Phiqcyl11, Phiqcyl12 = bbPhiqdot2(i, j, vx2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl21, Phiqcyl22 = bbPhiqdot2(i, j, vy2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl31, Phiqcyl32 = bbPhiqdot1(i, j, vz1pr, vx2pr, tn, q, par)
+            Phiqcyl41, Phiqcyl42 = bbPhiqdot1(i, j, vz1pr, vy2pr, tn, q, par)
+            Phiqrev51, Phiqrev52 = bbPhiqdot2(i, j, vz2pr, s1pr, s2pr, tn, q, par)
+            Phiq1k = vcat(Phiqcyl11, Phiqcyl21, Phiqcyl31, Phiqcyl41, Phiqrev51)
+            Phisr1k = hcat(Phiq1k[:, 1], Phiq1k[:, 2], Phiq1k[:, 3])
+            Phisp1k = hcat(Phiq1k[:, 4], Phiq1k[:, 5], Phiq1k[:, 6], Phiq1k[:, 7])
+            F1prk = -A1' * Phisr1k' * Lamk
+            T1prk = -(0.5 * GEval(p1) * Phisp1k' - atil(s1pr) * A1' * Phisr1k') * Lamk
+            fx1prk = -vx1pr' * F1prk + (1/a) * vy1pr' * T1prk
+            fy1prk = -vy1pr' * F1prk - (1/a) * vx1pr' * T1prk
+            fx2prk = -(1/a) * vy1pr' * T1prk
+            fy2prk = (1/a) * vx1pr' * T1prk
+            f1prk = sqrt(fx1prk^2 + fy1prk^2)
+            f2prk = sqrt(fx2prk^2 + fy2prk^2)
+            F12kcyl = f1prk + f2prk
+        
+            if j == 0
+                omeg12k = 2 * vz1pr' * A1' * (Ep1 * p1d)
+                Sfr2, Sfrpr2 = SfrSfrpr(R * omeg12k, mus, mud, par)
+                Sfr2 = (w/N) * Sfr2
+                Sfrpr2 = (w/N) * Sfrpr2
+                tau12kcylfr = -R * F12kcyl * Sfr2
+                fz1prk = vz1pr' * F1prk
+                csfz1prk, dcsfz1prk = csign(fz1prk, par)
+                tau12prkrev5fr = -R * fz1prk * csfz1prk * Sfr2
+                Q1krevfr = vcat(0, 0, 0, (2 * Ep1' * A1 * vz1pr * (tau12kcylfr + tau12prkrev5fr))...)
+                QA = add_constraint!(QA, Q1krevfr, 7 * (i - 1), 0)
+            end
+        
+            if j >= 1
+                r2, p2 = qPart(q, j)
+                r2d, p2d = qPart(qd, j)
+                Ep2 = EEval(p2)
+                omeg12k = 2 * vz1pr' * A1' * (Ep1 * p1d - Ep2 * p2d)
+                Sfr2, Sfrpr2 = SfrSfrpr(R * omeg12k, mus, mud, par)
+                Sfr2 = (w/N) * Sfr2
+                Sfrpr2 = (w/N) * Sfrpr2
+                tau12kcylfr = -R * F12kcyl * Sfr2
+                fz1prk = vz1pr' * F1prk
+                csfz1prk, dcsfz1prk = csign(fz1prk, par)
+                tau12prkrev5fr = -R * fz1prk * csfz1prk * Sfr2
+                Q1krevfr = vcat(0, 0, 0, (2 * Ep1' * A1 * vz1pr * (tau12kcylfr + tau12prkrev5fr))...)
+                QA = add_constraint!(QA, Q1krevfr, 7 * (i - 1), 0)
+                Q2krevfr = vcat(0, 0, 0, (-2 * Ep2' * A1 * vz1pr * (tau12kcylfr + tau12prkrev5fr))...)
+                QA = add_constraint!(QA, Q2krevfr, 7 * (j - 1), 0)
+            end
+        end
+        
+
         if SJDT[1, k] == 5  # Translational joint
             i, j, s1pr, s2pr, vx1pr, vz1pr, vx2pr, vz2pr, a, b, mus, mud, ms, nm = TranPart(k, SJDT)
             vy1pr = atil(vz1pr) * vx1pr

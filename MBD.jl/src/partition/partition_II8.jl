@@ -97,3 +97,22 @@ function SphPart(k, SJDT)
 
     return i, j, s1pr, s2pr
 end
+
+function qPart(q, i)
+    r = q[7*(i-1)+1:7*(i-1)+3]
+    p = q[7*(i-1)+4:7*(i-1)+7]
+    return r, p
+end
+
+function STSDATPart(STSDAT, T)
+    i = STSDAT[1, T]
+    j = STSDAT[2, T]
+    sipr = [STSDAT[3, T], STSDAT[4, T], STSDAT[5, T]]
+    sjpr = [STSDAT[6, T], STSDAT[7, T], STSDAT[8, T]]
+    K = STSDAT[9, T]
+    C = STSDAT[10, T]
+    el0 = STSDAT[11, T]
+    F = STSDAT[12, T]
+
+    return i, j, sipr, sjpr, K, C, el0, F
+end

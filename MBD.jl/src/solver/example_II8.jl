@@ -205,10 +205,20 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     KE=[0]
     # Integration
     filled_columns=1
+    V=[]
+    U=[]
+    B=[]
+    npar=0
+    BCond0=0
+    # app=4 initial
+    omegaz1 = [0]
+    theta1 = [0]
+    dely2pr = [0]
+
     while t[n] < tfinal
 
         if filled_columns == size(Q, 2)
-            println("double")
+            #println("double")
             # If the array is full, double its size.
             t = vcat(t, zeros(size(t)))
             Q = hcat(Q, zeros(ngc, size(Q, 2)))
@@ -228,13 +238,10 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             QQA = hcat(QQA, zeros(ngc, size(QQA, 2)))
 
         end
-
-
         filled_columns += 1
 
         n += 1
         t[n] = t[n-1] + h
-        println("t = ",t)
         tn = t[n]
         tnm = t[n-1]
 
@@ -284,7 +291,7 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             # Parameterization
             tnm = t[n-1]
             v, vd, vdd, q0, U, V, B, jRepar = Param(n, tnm, Q, Qd, Qdd, SJDT, par, jRepar)
-
+            println("Cr>1 V=",V)
             u = zeros(nu)
             Uu[:, n-1] = u
             Vv[:, n-1] = v
@@ -318,7 +325,7 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             hrpt = vcat(hrpt, h)
             LLam[:, n] = Lam
         end
-
+        #println(V)
         if integ == 3  # Explicit Ind0 Nystrom4
             v, vd, vdd, Lam, ECond, jodeiter1 = ExplicitInd0Nystrom4(n, tn, Vv, Vvd, Vvdd, LLam, Uu, V, U, B, q0, h, npar, SJDT, SMDT, STSDAT, par)
 
@@ -384,11 +391,12 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
 
         i = 1
         PE = vcat(PE, 0)
+        PEn=0.0
         while i <= nb
-            PE[n] += SMDT[1, i] * g * q[7*(i-1)+3]
+            PEn += SMDT[1, i] * g * q[7*(i-1)+3]
             i += 1
         end
-
+        PE = vcat(PE, PEn)
         SE = vcat(SE, 0)
         TS = 1
         while TS <= NTSDA
@@ -410,15 +418,37 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
 
         TE = vcat(TE, KE[n] + PE[n] + SE[n])
         # println(n)
-        println(tn)
+        #println(tn)
+        if app == 4       # Rotating Disk with Translating Body
+            theta1[1] = 0
+            p1 = [q[4], q[5], q[6], q[7]]
+            p1d = [qd[4], qd[5], qd[6], qd[7]]
+            r2 = [q[8], q[9], q[10]]
+            E1 = EEval(p1)
+            A1 = ATran(p1)
+            push!(omegaz1, 2 * uz' * E1 * p1d)
+            push!(theta1, theta1[n - 1] + h * omegaz1[n])
+            push!(dely2pr, (A1' * (r2 - A1 * ux))' * uy)
+        end
+
+
+    end
+    if app==4
+        df = DataFrame()
+        df[!, "t"] = t
+        df[!, "theta1"] = theta1
+        df[!, "omegaz1"] = omegaz1
+        CSV.write("jl_solver_app4.csv", df)
     end
 
-    df = DataFrame()
-    df[!, "t"] = t
-    df[!, "x"] = Q[1, :]
+    if app==6
+        df = DataFrame()
+        df[!, "t"] = t
+        df[!, "x"] = Q[1, :]
+        CSV.write("jl_solver.csv", df)
+    end
 
 
-    CSV.write("jl_solver.csv", df)
 
     # println("u₀=", u₀)
     # println("du₀=", du₀)
@@ -453,7 +483,10 @@ function save(sol)
     CSV.write("jl_solver.csv", df)
 end
 
-sol = test_EI0(app=6, tspan=(0.0, 1.0))
-
-draw(sol)
-save(sol)
+using ProfileView
+#@ProfileView.profview test_EI0(app=4, tspan=(0.0, 0.1))  # run once to trigger compilation (ignore this one)
+#@ProfileView.profview test_EI0(app=4, tspan=(0.0, 1.0))
+#sol = test_EI0(app=6, tspan=(0.0, 1.0))
+test_EI0(app=4, tspan=(0.0, 1.0))
+#draw(sol)
+#save(sol)

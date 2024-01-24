@@ -217,6 +217,127 @@ function QAsqqd(tn, q, qd, SMDT, STSDAT, par)
             end
         end
 
+        if SJDT[1, k] == 5     # Translational joint
+            i, j, s1pr, s2pr, vx1pr, vz1pr, vx2pr, vz2pr, a, b, mus, mud, ms, nm = TranPart(k, SJDT)
+            vy1pr = atil(vz1pr) * vx1pr
+            vy2pr = atil(vz2pr) * vx2pr
+            Lamk = Lam[ms:ms+4]
+            r1, p1 = qPart(q, i)
+            A1 = ATran(p1)
+            r1d, p1d = qPart(qd, i)
+            if j == 0
+                r2 = z3
+                p2 = [1; 0; 0; 0]
+                r2d = z3
+                p2d = z4
+            end
+
+            if j >= 1
+                r2, p2 = qPart(q, j)
+                r2d, p2d = qPart(qd, j)
+            end
+
+            # q1 Jacobian Calculation
+            Phiqcyl11, Phiqcyl12 = bbPhiqdot2(i, j, vx2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl21, Phiqcyl22 = bbPhiqdot2(i, j, vy2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl31, Phiqcyl32 = bbPhiqdot1(i, j, vz1pr, vx2pr, tn, q, par)
+            Phiqcyl41, Phiqcyl42 = bbPhiqdot1(i, j, vz1pr, vy2pr, tn, q, par)
+            Phiqtran51, Phiqtran52 = bbPhiqdot1(i, j, vy1pr, vx2pr, tn, q, par)
+            Phiq1k = vcat(Phiqcyl11, Phiqcyl21, Phiqcyl31, Phiqcyl41, Phiqtran51)
+            Phisr1k = hcat(Phiq1k[:, 1], Phiq1k[:, 2], Phiq1k[:, 3])
+            Phisp1k = hcat(Phiq1k[:, 4], Phiq1k[:, 5], Phiq1k[:, 6], Phiq1k[:, 7])
+            # Reaction Force/Torque Calculation
+            F1prk = -A1' * Phisr1k' * Lamk
+            T1prk = -(0.5 * GEval(p1) * Phisp1k' - atil(s1pr) * A1' * Phisr1k') * Lamk
+            fx1prk = -vx1pr' * F1prk + ((1 / a) * vy1pr' + (1 / b) * vz1pr') * T1prk
+            fy1prk = -vy1pr' * F1prk - (1 / a) * vx1pr' * T1prk
+            fx2prk = -(1 / a) * vy1pr' * T1prk
+            fy2prk = (1 / a) * vx1pr' * T1prk
+            fx3prk = (1 / b) * vz1pr' * T1prk
+            csfx1prk, dcsfx1prk = csign(fx1prk, par)
+            csfy1prk, dcsfy1prk = csign(fy1prk, par)
+            csfx2prk, dcsfx2prk = csign(fx2prk, par)
+            csfy2prk, dcsfy2prk = csign(a, par)
+            csfx3prk, dcsfx3prk = csign(fx3prk, par)
+            F12ktran = fx1prk * csfx1prk + fy1prk * csfy1prk + fx2prk * csfx2prk +
+                       fy2prk * csfy2prk + fx3prk * csfx3prk
+
+            # Friction Force Calculation
+            BT1 = BTran(p1, s1pr)
+            BT2 = BTran(p2, s2pr)
+            s12dk = -vz1pr' * A1' * (r2d + BT2 * p2d - r1d - BT1 * p1d)
+            Sfr1, Sfrpr1 = SfrSfrpr(s12dk, mus, mud, par)
+            Ep1 = EEval(p1)
+            Ep2 = EEval(p2)
+            f12ktranfr = -F12ktran * Sfr1
+
+            # Calculate P4 terms in Eq. 6.8.25, Using P4 submatrices
+            P4cyl111, P4cyl112, P4cyl122 = bbP4dot2(i, j, vx2pr, s1pr, s2pr, tn, q, Lamk[1], par)
+            P4cyl211, P4cyl212, P4cyl222 = bbP4dot2(i, j, vy2pr, s1pr, s2pr, tn, q, Lamk[2], par)
+            P4cyl311, P4cyl312, P4cyl322 = bbP4dot1(i, j, vz1pr, vx2pr, tn, q, Lamk[3], par)
+            P4cyl411, P4cyl412, P4cyl422 = bbP4dot1(i, j, vz1pr, vy2pr, tn, q, Lamk[4], par)
+            P4tran511, P4tran512, P4tran522 = bbP4dot1(i, j, vy1pr, vx2pr, tn, q, Lamk[5], par)
+            P411k = P4cyl111 + P4cyl211 + P4cyl311 + P4cyl411 + P4tran511
+            P412k = P4cyl112 + P4cyl212 + P4cyl312 + P4cyl412 + P4tran512
+            P41 = [P411k P412k]
+            Phiksr1TLamsq12 = [P41[1, :]; P41[2, :]; P41[3, :]]
+            Phiksp1TLamsq12 = [P41[4, :]; P41[5, :]; P41[6, :]; P41[7, :]]
+
+            # Derivatives of Reaction Force w.r.t. q12
+            CT1 = CTran(p1, Phisr1k' * Lamk)
+            F1prksq12 = -A1' * Phiksr1TLamsq12 - [zeros(3, 3), CT1, zeros(3, 7)]
+            T1prksq12 = -(0.5 * GEval(p1) * Phiksp1TLamsq12 - atil(s1pr) * A1' * Phiksr1TLamsq12) -
+                        [zeros(3, 3), -0.5 * GEval(Phisp1k' * Lamk) - atil(s1pr) * CT1, zeros(3, 7)]
+            fx1prksq12 = -vx1pr' * F1prksq12 + ((1 / a) * vy1pr' + (1 / b) * vz1pr') * T1prksq12
+            fy1prksq12 = -vy1pr' * F1prksq12 - (1 / a) * vx1pr' * T1prksq12
+            fx2prksq12 = -(1 / a) * vy1pr' * T1prksq12
+            fy2prksq12 = (1 / a) * vx1pr' * T1prksq12
+            fx3prksq12 = (1 / b) * vz1pr' * T1prksq12
+            F12ktransq12 = (csfx1prk + fx1prk * dcsfx1prk) * fx1prksq12 +
+                           (csfy1prk + fy1prk * dcsfy1prk) * fy1prksq12 +
+                           (csfx2prk + fx2prk * dcsfx2prk) * fx2prksq12 +
+                           (csfy2prk + fy2prk * dcsfy2prk) * fy2prksq12 +
+                           (csfx3prk + fx3prk * dcsfx3prk) * fx3prksq12
+
+            # Evaluate QAsq
+            s12dksq12 = -vz1pr' * ([zeros(3, 3), CTran(p1, (r2d + BT2 * p2d - r1d - BT1 * p1d)), zeros(3, 7)] +
+                                   A1' * [zeros(3, 3), -BTran(p1d, s1pr), zeros(3, 3), BTran(p2d, s2pr)])
+            f12ktranfrsq12 = -F12ktran * Sfrpr1 * s12dksq12 - Sfr1 * F12ktransq12
+            BT1vz = BTran(p1, vz1pr)
+            c1 = [zeros(3, 3), BT1vz, zeros(3, 7)] * f12ktranfr
+            c2 = [zeros(4, 3), KEval(s1pr, A1 * vz1pr) + BT1' * BT1vz, zeros(4, 7)] * f12ktranfr
+            Q1ktranfrsq12 = [A1 * vz1pr * f12ktranfrsq12 + c1; BT1' * A1 * vz1pr * f12ktranfrsq12 + c2]
+            Q1ktranfrsq1 = Q1ktranfrsq12[:, 1:7]
+            QAsq = add_constraint!(QAsq, Q1ktranfrsq1, 7 * (i - 1), 7 * (i - 1))
+
+            if j >= 1
+                Q1ktranfrsq2 = Q1ktranfrsq12[:, 8:14]
+                QAsq = add_constraint!(QAsq, Q1ktranfrsq2, 7 * (i - 1), 7 * (j - 1))
+                c3 = [zeros(4, 3), BT2' * BT1vz, zeros(4, 3), KEval(s2pr, A1 * vz1pr)] * f12ktranfr
+                Q2ktranfrsq12 = [-A1 * vz1pr * f12ktranfrsq12 - c1; -BT2' * A1 * vz1pr * f12ktranfrsq12 - c3]
+                Q2ktranfrsq1 = Q2ktranfrsq12[:, 1:7]
+                Q2ktranfrsq2 = Q2ktranfrsq12[:, 8:14]
+                QAsq = add_constraint!(QAsq, Q2ktranfrsq1, 7 * (j - 1), 7 * (i - 1))
+                QAsq = add_constraint!(QAsq, Q2ktranfrsq2, 7 * (j - 1), 7 * (j - 1))
+            end
+
+            # Evaluate QAsq12d
+            s12dksq12d = -vz1pr' * A1' * [-I3, -BT1, I3, BT2]
+            f12ktranfrsq12d = -F12ktran * Sfrpr1 * s12dksq12d
+            Q1ktranfrsq12d = [A1 * vz1pr; BT1' * A1 * vz1pr] * f12ktranfrsq12d
+            Q1ktranfrsq1d = Q1ktranfrsq12d[:, 1:7]
+            QAsqd = add_constraint!(QAsqd, Q1ktranfrsq1d, 7 * (i - 1), 7 * (i - 1))
+
+            if j >= 1
+                Q1ktranfrsq2d = Q1ktranfrsq12d[:, 8:14]
+                QAsqd = add_constraint!(QAsqd, Q1ktranfrsq2d, 7 * (i - 1), 7 * (j - 1))
+                Q2ktranfrsq12d = [-A1 * vz1pr; -BT2' * A1 * vz1pr] * f12ktranfrsq12d
+                Q2ktranfrsq1d = Q2ktranfrsq12d[:, 1:7]
+                Q2ktranfrsq2d = Q2ktranfrsq12d[:, 8:14]
+                QAsqd = add_constraint!(QAsqd, Q2ktranfrsq1d, 7 * (j - 1), 7 * (i - 1))
+                QAsqd = add_constraint!(QAsqd, Q2ktranfrsq2d, 7 * (j - 1), 7 * (j - 1))
+            end
+        end
         k = k + 1
 
     end

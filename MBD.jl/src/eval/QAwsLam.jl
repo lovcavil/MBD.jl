@@ -85,6 +85,84 @@ function QAwsLamEval(tn, q, qd, Lam, SJDT, STSDAT, par, w, N)
                 QAwsLam = add_constraint!(QAwsLam, Q2kcylfrsLam, 7 * (j - 1), ms - 1)
             end
         end
+        if SJDT[1, k] == 4     # Revolute joint
+            i, j, s1pr, s2pr, vx1pr, vz1pr, vx2pr, vz2pr, a, R, mus, mud, ms, nm = RevPart(k, SJDT)
+            vy1pr = atil(vz1pr) * vx1pr
+            vy2pr = atil(vz2pr) * vx2pr
+            Lamk = Lam[ms:ms+4]
+            r1, p1 = qPart(q, i)
+            A1 = ATran(p1)
+            r1d, p1d = qPart(qd, i)
+            if j == 0
+                r2 = z3
+                p2 = [1; 0; 0; 0]
+                r2d = z3
+                p2d = z4
+            end
+            if j >= 1
+                r2, p2 = qPart(q, j)
+                r2d, p2d = qPart(qd, j)
+            end
+        
+            # q1 Jacobian Calculation
+            Phiqcyl11, Phiqcyl12 = bbPhiqdot2(i, j, vx2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl21, Phiqcyl22 = bbPhiqdot2(i, j, vy2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl31, Phiqcyl32 = bbPhiqdot1(i, j, vz1pr, vx2pr, tn, q, par)
+            Phiqcyl41, Phiqcyl42 = bbPhiqdot1(i, j, vz1pr, vy2pr, tn, q, par)
+            Phiqrev51, Phiqrev52 = bbPhiqdot2(i, j, vz2pr, s1pr, s2pr, tn, q, par)
+            Phiq1k = vcat(Phiqcyl11, Phiqcyl21, Phiqcyl31, Phiqcyl41, Phiqrev51)
+            Phisr1k = hcat(Phiq1k[:, 1], Phiq1k[:, 2], Phiq1k[:, 3])
+            Phisp1k = hcat(Phiq1k[:, 4], Phiq1k[:, 5], Phiq1k[:, 6], Phiq1k[:, 7])
+        
+            # Reaction Force/Torque Calculation
+            F1prk = -A1' * Phisr1k' * Lamk
+            T1prk = -(0.5 * GEval(p1) * Phisp1k' - atil(s1pr) * A1' * Phisr1k') * Lamk
+            fx1prk = -vx1pr' * F1prk + (1/a) * vy1pr' * T1prk
+            fy1prk = -vy1pr' * F1prk - (1/a) * vx1pr' * T1prk
+            fx2prk = -(1/a) * vy1pr' * T1prk
+            fy2prk = (1/a) * vx1pr' * T1prk
+            fz1prk = vz1pr' * F1prk
+            f1prk = sqrt(fx1prk^2 + fy1prk^2)
+            f2prk = sqrt(fx2prk^2 + fy2prk^2)
+            F12kcyl = f1prk + f2prk
+        
+            # Friction Force/Torque Calculation
+            Ep1 = EEval(p1)
+            Ep2 = EEval(p2)
+            BT1 = BTran(p1, s1pr)
+            BT2 = BTran(p2, s2pr)
+            BTv1 = BTran(p1, vz1pr)
+            omeg12k = 2 * vz1pr' * A1' * (Ep1 * p1d - Ep2 * p2d)
+            Sfr2, Sfrpr2 = SfrSfrpr(R * omeg12k, mus, mud, par)
+            Sfr2 = (w/N) * Sfr2
+            Sfrpr2 = (w/N) * Sfrpr2
+            tau12kcylfr = -R * F12kcyl * Sfr2
+            csfz1prk, dcsfz1prk = csign(fz1prk, par)
+            tau12prkrev5fr = -R * fz1prk * csfz1prk * Sfr2
+        
+            # Evaluate QAsLam
+            F1prksLam = -A1' * Phisr1k'
+            T1prksLam = -(0.5 * GEval(p1) * Phisp1k' - atil(s1pr) * A1' * Phisr1k')
+            fx1prksLam = -vx1pr' * F1prksLam + (1/a) * vy1pr' * T1prksLam
+            fy1prksLam = -vy1pr' * F1prksLam - (1/a) * vx1pr' * T1prksLam
+            fx2prksLam = -(1/a) * vy1pr' * T1prksLam
+            fy2prksLam = (1/a) * vx1pr' * T1prksLam
+            fz1prksLam = vz1pr' * F1prksLam
+            F12kcylsLam = (1/(f1prk + 1e-6)) * (fx1prk * fx1prksLam + fy1prk * fy1prksLam) +
+                          (1/(f2prk + 1e-6)) * (fx2prk * fx2prksLam + fy2prk * fy2prksLam)
+            tau12kcylfrsLam = -R * Sfr2 * F12kcylsLam
+            tau12prkrev5frsLam = -R * Sfr2 * (csfz1prk + fz1prk * dcsfz1prk) * fz1prksLam
+            Q1krevfrsLam = [zeros(3, 1); 2 * Ep1' * A1 * vz1pr] *
+                           (tau12prkrev5frsLam + tau12kcylfrsLam)
+            QAwsLam = add_constraint!(QAwsLam, Q1krevfrsLam, 7 * (i - 1), ms - 1)
+        
+            if j >= 1
+                Q2krevfrsLam = [zeros(3, 1); -2 * Ep2' * A1 * vz1pr] *
+                               (tau12prkrev5frsLam + tau12kcylfrsLam)
+                QAwsLam = add_constraint!(QAwsLam, Q2krevfrsLam, 7 * (j - 1), ms - 1)
+            end
+        end
+        
         if SJDT[1, k] == 5  # Translational joint
             i, j, s1pr, s2pr, vx1pr, vz1pr, vx2pr, vz2pr, a, b, mus, mud, ms, nm = TranPart(k, SJDT)
             vy1pr = atil(vz1pr) * vx1pr

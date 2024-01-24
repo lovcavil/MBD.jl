@@ -64,6 +64,14 @@ function BTran(p, apr)
     return BT
 end
 
+function CTran(p, apr)
+    e0 = p[1]
+    e = p[2:4]
+    etil = atil(e)  # Assuming 'atil' is previously defined
+    CT = 2 * hcat((e0 * I - etil) * apr, e * apr' + (e0 * I - etil) * atil(apr))
+    return CT
+end
+
 #= # Example usage:
 p = [1, 2, 3, 4]  # Example quaternion components
 apr = [5, 6, 7]   # Example vector
@@ -71,11 +79,7 @@ BT_matrix = BTran(p, apr)
 println("The BTran matrix is:")
 println(BT_matrix) =#
 
-function qPart(q, i)
-    r = q[7*(i-1)+1:7*(i-1)+3]
-    p = q[7*(i-1)+4:7*(i-1)+7]
-    return r, p
-end
+
 
 # Example usage:
 #q = rand(14) # Example vector of length 14, which can hold data for two 'i' indices
@@ -87,18 +91,6 @@ println("Quaternion p: ", p) =#
 
 
 
-
-function STSDATPart(STSDAT, T)
-    i = STSDAT[1, T]
-    j = STSDAT[2, T]
-    sipr = [STSDAT[3, T], STSDAT[4, T], STSDAT[5, T]]
-    sjpr = [STSDAT[6, T], STSDAT[7, T], STSDAT[8, T]]
-    K = STSDAT[9, T]
-    C = STSDAT[10, T]
-    el0 = STSDAT[11, T]
-    F = STSDAT[12, T]
-    return i, j, sipr, sjpr, K, C, el0, F
-end
 
 
 function EEval(p)
