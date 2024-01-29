@@ -7,5 +7,7 @@
 # Pkg.add("Plots")
 # import Pkg; Pkg.add("MacroTools")
 
+# using Pkg
+# Pkg.add("Parameters")
 using Pkg
-Pkg.add("Parameters")
+Pkg.add("Dierckx")

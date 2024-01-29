@@ -1,5 +1,7 @@
 using LinearAlgebra
+using Dierckx
 include("../mathfunction_II8.jl")
+include("AppData_door307.jl")
 #include("AppData_door.jl")
 export AppData_II8,process_vector,AppDataStruct
 
@@ -101,8 +103,6 @@ function AppData_II8(app)
         qd0 = vcat(r1d0, p1d0, r2d0, p2d0)
     end
     
-
-
     if app == 6  # One Body Translation Along x axis
 
         nb = 1      # Number of bodies
@@ -146,6 +146,98 @@ function AppData_II8(app)
         qd0 = [r1d0; p1d0]
     end
 
+    if app == 208  # single Pendulum+poly x=1  Spherical to Ground *
+        nb = 1         # Number of bodies
+        ngc = 7 * nb    # Number of generalized coordinates
+        nh = 2        # Number of holonomic constraints
+        nhc = 4        # Number of holonomic constraint equations
+        nc = nhc + nb   # Number of constraint equations
+        NTSDA = 0       # Number of TSDA force elements
+        nv = ngc - nc
+        nu = nc   
+        zer = zeros(3)
+        # SJDT(22, nh): Joint Data Table
+        # SJDT[:, k] = [t, i, j, sipr, sjpr, d, uxipr, uzipr, uxjpr, uzjpr]
+        # k = joint number; t = joint type (1=Dist, 2=Sph, 3=Cyl, 4=Rev, 5=Tran, 
+        # 6=Univ, 7=Strut, 8=Rev-Sph); i & j = bodies connected, i > 0; 1010=fxc
+        # si & sjpr = vectors to Pi & Pj; d = dist.; uxipr, uzipr, uxjpr, uzjpr
+        SJDT = Array{Any}(undef, 28, nh)
+        si1pr = [-1, -1, 0]
+        sjpr = [0, 0, 0]
+        SJDT[:, 1] = Any[2, 1, 0, si1pr..., sjpr..., 0, zer..., zer..., zer..., zer..., 0.0, 0.0, 0.0, 0.0, 0, 0]  # Spherical Joint - Body 1 and Ground
+        si3pr = [0, 0, 0]
+        sj3pr = [0, 0, 0]
+        sx = [-2,-1,0 ,.2, .7,  1, 2]
+        sy = [1,1, 0,  0,  0, 1, -2]
+        # Create a spline object
+        spline = Spline1D(sx, sy,k=5)
+        SJDT[:, 2] = Any[1060, 1, 0, si3pr..., sj3pr..., [(1, 0), (2, 1), (3, 0)], zer..., zer..., zer..., zer..., 0.0, 0.0, 0.0, 0.0, 0, 0]  # Spherical Joint - Body 1 and Ground
+        # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
+        # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
+        #SMDT = hcat(vcat(30, 90, 90, 30), vcat(30, 90, 90, 30))
+        SMDT = hcat(vcat(30, 0.1, 0.1, 0.1))
+        # STSDAT(12, 1): TSDA Data Table
+        STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
+
+        # Initial generalized coordinates
+        r10 = [1, 1, 0]
+        p10 = [1, zer...]
+
+        #q0 = [r10..., p10...,r20..., p20...]
+        q0 = [r10..., p10...]
+        omeg1pr0 = [0, 0, 0]
+        #A=mathfunction.ATran(p10)
+        r1d0 = ATran(p10) * atil(omeg1pr0) * si1pr
+        p1d0 = 0.5 * GEval(p10)' * omeg1pr0
+        #qd0 = [r1d0..., p1d0...,r2d0..., p2d0...]
+        qd0 = [r1d0..., p1d0...]
+    end
+    if app == 209  # single Pendulum+spline x=1  Spherical to Ground *
+        nb = 1         # Number of bodies
+        ngc = 7 * nb    # Number of generalized coordinates
+        nh = 2        # Number of holonomic constraints
+        nhc = 4        # Number of holonomic constraint equations
+        nc = nhc + nb   # Number of constraint equations
+        NTSDA = 0       # Number of TSDA force elements
+        nv = ngc - nc
+        nu = nc   
+        zer = zeros(3)
+        # SJDT(22, nh): Joint Data Table
+        # SJDT[:, k] = [t, i, j, sipr, sjpr, d, uxipr, uzipr, uxjpr, uzjpr]
+        # k = joint number; t = joint type (1=Dist, 2=Sph, 3=Cyl, 4=Rev, 5=Tran, 
+        # 6=Univ, 7=Strut, 8=Rev-Sph); i & j = bodies connected, i > 0; 1010=fxc
+        # si & sjpr = vectors to Pi & Pj; d = dist.; uxipr, uzipr, uxjpr, uzjpr
+        SJDT = Array{Any}(undef, 28, nh)
+        si1pr = [-1, -1, 0]
+        sjpr = [0, 0, 0]
+        SJDT[:, 1] = Any[2, 1, 0, si1pr..., sjpr..., 0, zer..., zer..., zer..., zer..., 0.0, 0.0, 0.0, 0.0, 0, 0]  # Spherical Joint - Body 1 and Ground
+        si3pr = [0, 0, 0]
+        sj3pr = [0, 0, 0]
+        sx = [-2,-1,0 ,.2, .7,  1, 2]
+        sy = [1,1, 0,  0,  0, 1, -2]
+        # Create a spline object
+        spline = Spline1D(sx, sy,k=5)
+        SJDT[:, 2] = Any[1070, 1, 0, si3pr..., sj3pr..., spline, zer..., zer..., zer..., zer..., 0.0, 0.0, 0.0, 0.0, 0, 0]  # Spherical Joint - Body 1 and Ground
+        # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
+        # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
+        #SMDT = hcat(vcat(30, 90, 90, 30), vcat(30, 90, 90, 30))
+        SMDT = hcat(vcat(30, 0.1, 0.1, 0.1))
+        # STSDAT(12, 1): TSDA Data Table
+        STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
+
+        # Initial generalized coordinates
+        r10 = [1, 1, 0]
+        p10 = [1, zer...]
+
+        #q0 = [r10..., p10...,r20..., p20...]
+        q0 = [r10..., p10...]
+        omeg1pr0 = [0, 0, 0]
+        #A=mathfunction.ATran(p10)
+        r1d0 = ATran(p10) * atil(omeg1pr0) * si1pr
+        p1d0 = 0.5 * GEval(p10)' * omeg1pr0
+        #qd0 = [r1d0..., p1d0...,r2d0..., p2d0...]
+        qd0 = [r1d0..., p1d0...]
+    end
 
     return nb,ngc,nh,nc,nv,nu,NTSDA,SJDT,SMDT,STSDAT,q0,qd0
 end

@@ -1,50 +1,51 @@
+using Dierckx
+export bbP2_Spline,bbP3_Spline,bbP4_Spline,bbPhi_Spline,bbPhiq_Spline
+# cid=1070
 
-export bbP2_Poly,bbP3_Poly,bbP4_Poly,bbPhi_Poly,bbPhiq_Poly
-# cid=1060
-
-function bbPhi_Poly(i, j, s1pr, s2pr, d,tn, q, par)
+function bbPhi_Spline(i, j, s1pr, s2pr, spline,tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
-    
     r1, p1 = qPart(q, i)
     A1 = ATran(p1)
+
     d1 = ( r1 + A1 * s1pr)
     d11 = d1[1]
     d12 = d1[2]
+    d=spline(d11)-d12
 
-    Phi=d11*d11-d12
-
+    Phi=d
+    #println("spl=",d)
     return Phi
 end
 
 
-function bbPhiq_Poly(i, j, s1pr, s2pr, guide_para,tn, q, par)
+function bbPhiq_Spline(i, j, s1pr, s2pr, spline,tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     I3 = Matrix{Float64}(I, 3, 3) # Identity matrix in Julia
-    E11=[1 0 0;0 0 0;0 0 0]
-    E22=[0 0 0;0 1 0;0 0 0]
+    #E11=[1 0 0;0 0 0;0 0 0]
+    #E22=[0 0 0;0 1 0;0 0 0]
     E1=[1 0 0]
     E2=[0 1 0]
     r1, p1 = qPart(q, i)
     A1 = ATran(p1)
-    d1 = ( r1 + A1 * s1pr)
+    d1 = ( r1 + A1 * s1pr) #₁₂
     d11 = d1[1]
     d12 = d1[2]
     d1q=hcat(I3,BTran(p1,s1pr))
 
     Phiq1 = zeros(1, 7)
-    for (k,s) in guide_para
-        Phiq1=Phiq1+s*k*(d11)^(k-1)*E1*d1q
-    end
+    Phiq1=Phiq1+derivative(spline,d11,1)*E1*d1q
     Phiq1 = Phiq1-E2*d1q
     Phiq2 = zeros(1, 7)
-    # println("phiq",Phiq1)
+    #println("phiq=",Phiq1)
     return Phiq1, Phiq2
 end
 
-function bbP2_Poly(i, j, s1pr, s2pr, guide_para,tn, q, qd, par)
+function bbP2_Spline(i, j, s1pr, s2pr, spline,tn, q, qd, par)
     # Assuming par is a structure or a dictionary with the following keys.
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     E11=[1 0 0;0 0 0;0 0 0]
+    E1=[1 0 0]
+    E2=[0 1 0]
     r1, p1 = qPart(q, i)
     xr1, xp1 = qPart(qd, i)
     A1 = ATran(p1)
@@ -52,35 +53,21 @@ function bbP2_Poly(i, j, s1pr, s2pr, guide_para,tn, q, qd, par)
     BT1x = BTran(xp1, s1pr)
 
     d1 = ( r1 + A1 * s1pr)
+    d11 = d1[1]
+    d12 = d1[2]
     d1q=hcat(I,BTran(p1,s1pr))
     a1 = (xr1' + xp1' * BT1')
-    i=1
     P21 = zeros(1, 7)
-    for (k,s) in guide_para
-        eiT, eiq = ei(i,k,d1,d1q)
-        P21 = P21+ a1*s*eiq+hcat([0 0 0],s*eiT*BT1x)
-    end
+
+    eiT=derivative(spline,d11,1)*E1
+    eiq=E1'*derivative(spline,d11,2)*E1*d1q
+    P21 = P21+ a1*eiq+hcat([0 0 0],eiT*BT1x)
+
     P22 = zeros(1, 7)
     return P21, P22
 end
 
-function ei(i,k,d1,d1q)
-    Ei=[0 0 0]
-    if i==1
-        Ei=[1 0 0]
-    end
-    if i==2
-        Ei=[2 0 0]
-    end
-    if i==3
-        Ei=[3 0 0]
-    end
-    eiT=k*(Ei*d1)[1, 1]^(k-1)*Ei
-    eiq=Ei'*k*(k-1)*(Ei*d1)[1, 1]^(k-2)*Ei*d1q
-    return eiT, eiq
-end
-
-function bbP3_Poly(i, j, s1pr, s2pr, d, tn, q, qd, par)
+function bbP3_Spline(i, j, s1pr, s2pr, d, tn, q, qd, par)
     I3 = Matrix{Float64}(I, 3, 3)  # Equivalent of eye(3) in MATLAB
 
     r1, p1 = qPart(q, i)
@@ -116,7 +103,7 @@ function bbP3_Poly(i, j, s1pr, s2pr, d, tn, q, qd, par)
     return P31, P32
 end
 
-function bbP4_Poly(i, j, s1pr, s2pr, d, tn, q, etak, par)
+function bbP4_Spline(i, j, s1pr, s2pr, d, tn, q, etak, par)
     I3 = Matrix{Float64}(I, 3, 3)
 
     r1, p1 = qPart(q, i)

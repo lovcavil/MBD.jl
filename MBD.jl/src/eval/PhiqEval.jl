@@ -158,6 +158,18 @@ function PhiqEval(tn, q, SJDT, par)
 
             m += 1
         end
+        if SJDT[1, k] == 1070
+            i, j, s1pr, s2pr, d,ms,nm = DistPart(k, SJDT)
+
+            Phiq1, Phiq2 = bbPhiq_Spline(i, j, s1pr, s2pr, d,tn, q, par)
+            Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
+
+            if j >= 1
+                Phiq = add_constraint!(Phiq, Phiq2, m, 7*(j-1))
+            end
+
+            m += 1
+        end
         k += 1
     end
 

@@ -49,7 +49,7 @@ end
 function test_II3()
 
     h0 = 0.001       # Initial time step
-    hvar = 0
+    hvar = 2
     g = 9.81
 
     # Application Data Function
@@ -88,9 +88,10 @@ end
 function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     # CAKD initialization
     # & Application Data Function
-    h0 = 0.01       # Initial time step
+    h0 = 0.001       # Initial time step
     h = h0
-    hvar = 0
+    hvar = 2  # hvar=1, variable h; hvar=2, constant h
+    hmax=0.01;
     g = 9.8
     utol = 10^-6
     Btol = 10^-6
@@ -108,8 +109,8 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     MaxBCondRat = 10.0 #     %Maximum ratio of BCond to BCond0 at parameterization
 
     vt = 100 * h0
-    integ = 3
-    tfinal = 1.0
+    integ = 4
+    tfinal = 5
     nb, ngc, nh, nc, nv, nu, NTSDA, SJDT, SMDT, STSDAT, q0, qd0 = AppData_II8(app)
     par = Any[nb, ngc, nh, nc, nv, nu, g, utol, Btol, intol, Atol, Vtol, hvar, NTSDA, vt]
 
@@ -419,7 +420,7 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
         SE = vcat(SE, SEn)
         TE = vcat(TE, KE[n] + PE[n] + SE[n])
         # println(n)
-        println(tn)
+        # println(tn) #________________________________________________________________________________
         if app == 4       # Rotating Disk with Translating Body
             theta1[1] = 0
             p1 = [q[4], q[5], q[6], q[7]]
@@ -452,7 +453,25 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
         CSV.write("jl_solver.csv", df)
     end
 
+    if app==208||app==209
+        df = DataFrame()
+        df[!, "t"] = t
+        df[!, "x"] = Q[1, :]
+        df[!, "y"] = Q[2, :]
+        df[!, "z"] = Q[3, :]
+        CSV.write("jl_solver.csv", df)
 
+        f01 = plot(t,Q[1, :])
+        display(f01)
+        f02 = plot(t,Q[2, :])
+        display(f02)
+        f03 = plot(t,Q[3, :])
+        display(f03)
+        p = plot(Q[1, :],Q[2, :],Q[3, :])
+        display(p)
+    end
+
+    col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
 
     # println("u₀=", u₀)
     # println("du₀=", du₀)
@@ -491,6 +510,6 @@ using ProfileView
 #@ProfileView.profview test_EI0(app=4, tspan=(0.0, 0.1))  # run once to trigger compilation (ignore this one)
 #@ProfileView.profview test_EI0(app=4, tspan=(0.0, 1.0))
 #sol = test_EI0(app=6, tspan=(0.0, 1.0))
-test_EI0(app=4, tspan=(0.0, 1.0))
+test_EI0(app=209, tspan=(0.0, 0.5))
 #draw(sol)
 #save(sol)

@@ -105,6 +105,12 @@ function PhiEval(tn, q, SJDT, par)
             Phi = add_constraint!(Phi, Phik, m, 0)
             m += 1
         end
+        if SJDT[1, k] == 1070
+            i, j, s1pr, s2pr, d,ms,nm = DistPart(k, SJDT)
+            Phik = bbPhi_Spline(i, j, s1pr, s2pr, d,tn, q, par)
+            Phi = add_constraint!(Phi, Phik, m, 0)
+            m += 1
+        end
         # ... (Continue with the rest of the constraints as per the given code)
 
         k += 1

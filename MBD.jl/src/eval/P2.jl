@@ -208,7 +208,25 @@ function P2Eval(tn,q,qd,SJDT,par)
             end
 
             # Increment the constraint counter
-            m += 1               
+            m += 1         
+        elseif constraintType == 1070  
+            # Check if the constraint type is a Distance Constraint
+            # Extract parameters for the Distance Constraint
+            i, j, s1pr, s2pr, d,ms,nm = DistPart(k, SJDT)
+
+            # Compute P21 and P22 for the Distance Constraint
+            P21, P22 = bbP2_Spline(i, j, s1pr, s2pr, d,tn, q, qd, par)
+
+            # Add P21 to P2 at the appropriate location
+            P2 = add_constraint!(P2, P21, m, 7 * (i - 1))
+
+            # If j is not zero, add P22 as well
+            if j >= 1
+                P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
+            end
+
+            # Increment the constraint counter
+            m += 1                     
         # Check if the constraint type is a Spherical Constraint
           
         end

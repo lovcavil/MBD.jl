@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy import cos,sin,sqrt
 data_jl = pd.read_csv(f"MBD.jl/src/util/208jl_solver.csv")
+data_jl = pd.read_csv(f"MBD.jl/src/util/208jl_solver_II8.csv")
+data_jl = pd.read_csv(f"MBD.jl/src/util/208jl_solver01281.csv")
 # Extract 't' column as a numpy array
 t = data_jl['t'].to_numpy()
 
