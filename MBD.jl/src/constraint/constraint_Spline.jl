@@ -13,7 +13,7 @@ function bbPhi_Spline(i, j, s1pr, s2pr, spline,tn, q, par)
     d=spline(d11)-d12
 
     Phi=d
-    #println("spl=",d)
+    #println("spl_d=",d)
     return Phi
 end
 

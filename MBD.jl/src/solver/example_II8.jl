@@ -88,7 +88,7 @@ end
 function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     # CAKD initialization
     # & Application Data Function
-    h0 = 0.001       # Initial time step
+    h0 = 0.005       # Initial time step
     h = h0
     hvar = 2  # hvar=1, variable h; hvar=2, constant h
     hmax=0.01;
@@ -292,7 +292,7 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             # Parameterization
             tnm = t[n-1]
             v, vd, vdd, q0, U, V, B, jRepar = Param(n, tnm, Q, Qd, Qdd, SJDT, par, jRepar)
-            println("Cr>1 V=",V)
+            #println("Cr>1 V=",V)#____________________________________________________________
             u = zeros(nu)
             Uu[:, n-1] = u
             Vv[:, n-1] = v
@@ -470,7 +470,21 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
         p = plot(Q[1, :],Q[2, :],Q[3, :])
         display(p)
     end
+    if app==307
+        df = DataFrame()
+        df[!, "t"] = t
+        df[!, "x"] = Q[1, :]
+        df[!, "y"] = Q[2, :]
+        df[!, "z"] = Q[3, :]
+        CSV.write("jl_solver.csv", df)
 
+        t=t[1:n]
+        Q=Q[:, 1:n]
+        display_figures_for_body(1,t,Q)
+        display_figures_for_body(2,t,Q)
+        display_figures_for_body(3,t,Q)
+        display_figures_for_body3(t, Q)
+    end
     col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
 
     # println("u₀=", u₀)
@@ -484,6 +498,71 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     # return sol
 end
 
+function display_figures_for_body(body_number,t,Q)
+    # Validate the input
+    if body_number < 1 || body_number > 3
+        error("Invalid body number. It must be either 1 or 23.")
+    end
+    # Determine the range in Q for the given body
+    q_range = 1+(body_number-1)*7:7 +(body_number-1)*7
+
+    # Initialize empty arrays for x, y, z
+    x = Q[q_range[1],:]
+    y = Q[q_range[2],:]
+    z = Q[q_range[3],:]
+
+    # Create subplots
+    p1 = plot(t, x, title = "X over time$(body_number)")
+    p2 = plot(t, y, title = "Y over time$(body_number)")
+    p3 = plot(t, z, title = "Z over time$(body_number)")
+
+    # Display the subplots vertically
+    p = plot(p1, p2, p3, layout=(3, 1))
+    display(p)
+    #p = plot(x,y,z,title = "body$(body_number)")
+
+    # Function to map time to color
+    function time_to_color(time, max_time)
+        rel_time = time / max_time
+        return RGB(1 - rel_time, rel_time, 0)  # Interpolating from yellow (1,1,0) to green (0,1,0)
+    end
+
+    # # Create an empty plot
+    # p = plot()
+
+    # # Add line segments to the plot
+    # for i in 1:length(t)-1
+    #     segment_color = time_to_color(t[i], maximum(t))
+    #     plot!(p, [x[i], x[i+1]], [y[i], y[i+1]], [z[i], z[i+1]], linecolor=segment_color, linewidth=1)
+    # end
+
+    #display(p)
+end
+
+function display_figures_for_body3(t, Q)
+    function time_to_color(time, max_time)
+        rel_time = time / max_time
+        return RGB(1 - rel_time, rel_time, 0)  # Interpolating from yellow (1,1,0) to green (0,1,0)
+    end
+    # Validate the input
+    p = plot()
+    # Determine the range in Q for the given body
+    for body_number in 1:3
+        q_range = 1+(body_number-1)*7:7+(body_number-1)*7
+
+        # Initialize empty arrays for x, y, z
+        x = Q[q_range[1], :]
+        y = Q[q_range[2], :]
+        z = Q[q_range[3], :]
+
+        # Add line segments to the plot
+        for i in 1:length(t)-1
+            segment_color = time_to_color(t[i], maximum(t))
+            plot!(p, [x[i], x[i+1]], [y[i], y[i+1]], [z[i], z[i+1]], linecolor=segment_color, linewidth=1)
+        end
+    end
+    display(p)
+end
 function draw(sol)
     f01 = plot(sol, vars=1:3)
     display(f01)
@@ -510,6 +589,10 @@ using ProfileView
 #@ProfileView.profview test_EI0(app=4, tspan=(0.0, 0.1))  # run once to trigger compilation (ignore this one)
 #@ProfileView.profview test_EI0(app=4, tspan=(0.0, 1.0))
 #sol = test_EI0(app=6, tspan=(0.0, 1.0))
-test_EI0(app=209, tspan=(0.0, 0.5))
+#test_EI0(app=209, tspan=(0.0, 0.5))
+#test_EI0(app=307, tspan=(0.0, 0.5))
 #draw(sol)
 #save(sol)
+
+#using BenchmarkTools
+@time test_EI0(app=307, tspan=(0.0, 0.5))

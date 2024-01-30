@@ -1,5 +1,6 @@
 using LinearAlgebra
 using Dierckx
+using DelimitedFiles
 include("../mathfunction_II8.jl")
 include("AppData_door307.jl")
 #include("AppData_door.jl")
@@ -11,6 +12,8 @@ struct AppDataStruct
     ngc::Int
     nh::Int
     nc::Int
+    nv::Int
+    nu::Int
     NTSDA::Int
     SJDT::Array{Any}
     SMDT::Array
@@ -55,6 +58,24 @@ end
 # Function to append `element` of `q` to the `target_vector`
 function append_to_vector(target_vector::Vector{Float64}, element)
     push!(target_vector, element)
+end
+
+function fit_xycurve(csvfile="",degree=3)
+        # Define the function to get the directory of the file
+        file_dir = @__DIR__ # Implement this function as needed
+
+        # Load data from CSV
+        full_path = joinpath(file_dir, csvfile)
+        arr = readdlm(full_path, ',', skipstart=1)
+        x = arr[:, 1]
+        y = arr[:, 2]
+        #z = arr[:, 3]
+        sort_indices = sortperm(x)
+    	x_sorted = x[sort_indices]
+    	y_sorted = y[sort_indices]
+        # Fit the spline
+        spline = Spline1D(x_sorted, y_sorted, k=degree)
+        return spline
 end
 
 function AppData_II8(app)
@@ -237,6 +258,13 @@ function AppData_II8(app)
         p1d0 = 0.5 * GEval(p10)' * omeg1pr0
         #qd0 = [r1d0..., p1d0...,r2d0..., p2d0...]
         qd0 = [r1d0..., p1d0...]
+    end
+
+    if app == 307  # model_door_307_spline
+        apps = model_door_307_spline()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc,apps.nv,apps.nu, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
     end
 
     return nb,ngc,nh,nc,nv,nu,NTSDA,SJDT,SMDT,STSDAT,q0,qd0
