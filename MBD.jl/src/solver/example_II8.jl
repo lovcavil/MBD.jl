@@ -7,84 +7,6 @@ using Sundials
 using Plots
 using CSV, DataFrames
 
-function test_II1()
-
-    h0 = 0.001       # Initial time step
-    hvar = 0
-    g = 9.81
-
-    # Application Data Function
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(201)
-    par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
-
-    # Integration P
-    t = 0.0
-    tspan = (0.0, 1.0)
-    println("START")
-    qdd, Lam, ECond = mathfunction.ODEfunct(t, q, qd, SMDT, STSDAT, SJDT, par)
-    u₀ = vcat(q, Lam, qd)
-    du₀ = vcat(qd, zeros(nc), qdd)
-
-    differential_vars = create_bool_vector(nb, nc)
-    simulation_params_dict = Dict(
-        :g => 9.81,
-        :SMDT => SMDT,
-        :STSDAT => STSDAT,
-        :SJDT => SJDT,
-        :par => par
-    )
-    println("u₀=", u₀)
-    println("du₀=", du₀)
-    println("differential_vars=", differential_vars)  # 输出 differential_vars 的值
-
-    prob = DAEProblem(implicitdae, du₀, u₀, tspan, simulation_params_dict, differential_vars=differential_vars)
-
-    # Integration
-    default_solve_kwargs = Dict(:alg => IDA(), :reltol => 1e-6, :abstol => 1e-6, :progress => true, :dtmin => 0.00001)
-    sol = solve(prob; default_solve_kwargs...)
-
-    return sol
-end
-
-function test_II3()
-
-    h0 = 0.001       # Initial time step
-    hvar = 2
-    g = 9.81
-
-    # Application Data Function
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(201)
-    par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
-
-    # Integration P
-    t = 0.0
-    tspan = (0.0, 1.0)
-    println("START")
-    qdd, Lam, ECond = mathfunction.ODEfunct(t, q, qd, SMDT, STSDAT, SJDT, par)
-    u₀ = vcat(q, Lam, qd)
-    du₀ = vcat(qd, zeros(nc), qdd)
-
-    differential_vars = create_bool_vector(nb, nc)
-    simulation_params_dict = Dict(
-        :g => 9.81,
-        :SMDT => SMDT,
-        :STSDAT => STSDAT,
-        :SJDT => SJDT,
-        :par => par
-    )
-    println("u₀=", u₀)
-    println("du₀=", du₀)
-    println("differential_vars=", differential_vars)  # 输出 differential_vars 的值
-
-    prob = DAEProblem(implicit3dae, du₀, u₀, tspan, simulation_params_dict, differential_vars=differential_vars)
-
-    # Integration
-    default_solve_kwargs = Dict(:alg => IDA(), :reltol => 1e-6, :abstol => 1e-6, :progress => true, :dtmin => 0.00001)
-    sol = solve(prob; default_solve_kwargs...)
-
-    return sol
-end
-
 function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     # CAKD initialization
     # & Application Data Function
@@ -110,7 +32,7 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
 
     vt = 100 * h0
     integ = 4
-    tfinal = 5
+    tfinal = tspan[2]
     nb, ngc, nh, nc, nv, nu, NTSDA, SJDT, SMDT, STSDAT, q0, qd0 = AppData_II8(app)
     par = Any[nb, ngc, nh, nc, nv, nu, g, utol, Btol, intol, Atol, Vtol, hvar, NTSDA, vt]
 
@@ -215,6 +137,13 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
     omegaz1 = [0.0]
     theta1 = [0.0]
     dely2pr = [0.0]
+    # app=307
+    omegaz2 = [0.0]
+    theta2 = [0.0]
+    omegaz3 = [0.0]
+    theta3 = [0.0]
+
+
 
     while t[n] < tfinal
 
@@ -432,7 +361,26 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             push!(theta1, theta1[n - 1] + h * omegaz1[n])
             push!(dely2pr, (A1' * (r2 - A1 * ux))' * uy)
         end
-
+        if app == 307       # 3 body
+            p1 = [q[4], q[5], q[6], q[7]]
+            p1d = [qd[4], qd[5], qd[6], qd[7]]
+            E1 = EEval(p1)
+            A1 = ATran(p1)
+            push!(omegaz1, 2 * uz' * E1 * p1d)
+            push!(theta1, theta1[n - 1] + h * omegaz1[n])
+            p1 = [q[4+7], q[5+7], q[6+7], q[7+7]]
+            p1d = [qd[4+7], qd[5+7], qd[6+7], qd[7+7]]
+            E1 = EEval(p1)
+            A1 = ATran(p1)
+            push!(omegaz2, 2 * uz' * E1 * p1d)
+            push!(theta2, theta2[n - 1] + h * omegaz2[n])
+            p1 = [q[4+7+7], q[5+7+7], q[6+7+7], q[7+7+7]]
+            p1d = [qd[4+7+7], qd[5+7+7], qd[6+7+7], qd[7+7+7]]
+            E1 = EEval(p1)
+            A1 = ATran(p1)
+            push!(omegaz3, 2 * uz' * E1 * p1d)
+            push!(theta3, theta3[n - 1] + h * omegaz3[n])
+        end
 
     end
     if app==4
@@ -471,18 +419,46 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
         display(p)
     end
     if app==307
-        df = DataFrame()
-        df[!, "t"] = t
-        df[!, "x"] = Q[1, :]
-        df[!, "y"] = Q[2, :]
-        df[!, "z"] = Q[3, :]
-        CSV.write("jl_solver.csv", df)
-
         t=t[1:n]
         Q=Q[:, 1:n]
+        df = DataFrame()
+        df[!, "t"] = t
+        df[!, "x1"] = Q[1, :]
+        df[!, "y1"] = Q[2, :]
+        df[!, "z1"] = Q[3, :]
+        df[!, "p11"] = Q[4, :]
+        df[!, "p21"] = Q[5, :]
+        df[!, "p31"] = Q[6, :]
+        df[!, "p41"] = Q[7, :]
+        df[!, "theta1"] = theta1
+        df[!, "omegaz1"] = omegaz1
+        df[!, "x2"] = Q[1+7, :]
+        df[!, "y2"] = Q[2+7, :]
+        df[!, "z2"] = Q[3+7, :]
+        df[!, "p12"] = Q[4+7, :]
+        df[!, "p22"] = Q[5+7, :]
+        df[!, "p32"] = Q[6+7, :]
+        df[!, "p42"] = Q[7+7, :]
+        df[!, "theta2"] = theta2
+        df[!, "omegaz2"] = omegaz2
+        df[!, "x3"] = Q[1+7+7, :]
+        df[!, "y3"] = Q[2+7+7, :]
+        df[!, "z3"] = Q[3+7+7, :]
+        df[!, "p13"] = Q[4+7+7, :]
+        df[!, "p23"] = Q[5+7+7, :]
+        df[!, "p33"] = Q[6+7+7, :]
+        df[!, "p43"] = Q[7+7+7, :]
+        df[!, "theta3"] = theta3
+        df[!, "omegaz3"] = omegaz3
+
+        CSV.write("jl_solver.csv", df)
+
         display_figures_for_body(1,t,Q)
+        display_figures_for_body2(t,theta1,omegaz1)
         display_figures_for_body(2,t,Q)
+        display_figures_for_body2(t,theta2,omegaz2)
         display_figures_for_body(3,t,Q)
+        display_figures_for_body2(t,theta3,omegaz3)
         display_figures_for_body3(t, Q)
     end
     col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
@@ -520,23 +496,16 @@ function display_figures_for_body(body_number,t,Q)
     p = plot(p1, p2, p3, layout=(3, 1))
     display(p)
     #p = plot(x,y,z,title = "body$(body_number)")
+end
 
-    # Function to map time to color
-    function time_to_color(time, max_time)
-        rel_time = time / max_time
-        return RGB(1 - rel_time, rel_time, 0)  # Interpolating from yellow (1,1,0) to green (0,1,0)
-    end
-
-    # # Create an empty plot
-    # p = plot()
-
-    # # Add line segments to the plot
-    # for i in 1:length(t)-1
-    #     segment_color = time_to_color(t[i], maximum(t))
-    #     plot!(p, [x[i], x[i+1]], [y[i], y[i+1]], [z[i], z[i+1]], linecolor=segment_color, linewidth=1)
-    # end
-
-    #display(p)
+function display_figures_for_body2(t,theta,omegaz)
+    # Create subplots
+    p1 = plot(t, theta, title = "theta over time")
+    p2 = plot(t, omegaz, title = "omegaz over time")
+    # Display the subplots vertically
+    p = plot(p1, p2, layout=(2, 1))
+    display(p)
+    #p = plot(x,y,z,title = "body$(body_number)")
 end
 
 function display_figures_for_body3(t, Q)
@@ -595,4 +564,4 @@ using ProfileView
 #save(sol)
 
 #using BenchmarkTools
-@time test_EI0(app=307, tspan=(0.0, 0.5))
+@time test_EI0(app=307, tspan=(0.0, .1))

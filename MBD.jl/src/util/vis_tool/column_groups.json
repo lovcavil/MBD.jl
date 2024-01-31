@@ -1,0 +1,10 @@
+{
+    "Curve1": ["cm_X", "cm_Y", "cm_Z"],
+    "Curve2": ["LF_X", "LF_Y", "LF_Z"],
+    "Curve3": ["LR_X", "LR_Y", "LR_Z"],
+    "Curve4": ["MF_X", "MF_Y", "MF_Z"],
+    "Curve5": ["MR_X", "MR_Y", "MR_Z"],
+    "Curve6": ["MG_X", "MG_Y", "MG_Z"],
+    "Curve7": ["LG_X", "LG_Y", "LG_Z"],
+    "Curve8": ["U_X", "U_Y", "U_Z"]
+}
