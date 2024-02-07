@@ -3,6 +3,7 @@ using Dierckx
 using DelimitedFiles
 include("../mathfunction_II8.jl")
 include("AppData_door307.jl")
+include("AppData_door308.jl")
 #include("AppData_door.jl")
 export AppData_II8,process_vector,AppDataStruct
 
@@ -266,6 +267,11 @@ function AppData_II8(app)
         return apps.nb, apps.ngc, apps.nh, apps.nc,apps.nv,apps.nu, apps.NTSDA,
          apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
     end
-
+    if app == 308  # model_door_307_spline
+        apps = model_door_308_spline()
+        println0(apps)
+        return apps.nb, apps.ngc, apps.nh, apps.nc,apps.nv,apps.nu, apps.NTSDA,
+         apps.SJDT, apps.SMDT, apps.STSDAT, apps.q0, apps.qd0
+    end
     return nb,ngc,nh,nc,nv,nu,NTSDA,SJDT,SMDT,STSDAT,q0,qd0
 end

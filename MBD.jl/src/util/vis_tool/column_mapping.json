@@ -23,5 +23,9 @@
     ".MODEL_CLOSE_ST2.Last_Run.MARKER_LG.Z": "LG_Z",
     ".MODEL_CLOSE_ST2.Last_Run.door1_cm.X": "cm_X",
     ".MODEL_CLOSE_ST2.Last_Run.door1_cm.Y": "cm_Y",
-    ".MODEL_CLOSE_ST2.Last_Run.door1_cm.Z": "cm_Z"
+    ".MODEL_CLOSE_ST2.Last_Run.door1_cm.Z": "cm_Z",
+    ".MODEL_CLOSE_ST2.Last_Run.MARKER_MR_SPL_2.Y": "MR_VY",
+    ".MODEL_CLOSE_ST2.Last_Run.MARKER_MF_SPL_2.Y": "MF_VY",
+    ".MODEL_CLOSE_ST2.Last_Run.GCON_MF_SPL.FY": "MF_FY",
+    ".MODEL_CLOSE_ST2.Last_Run.GCON_MR_SPL.FY": "MR_FY"
 }

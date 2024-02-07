@@ -381,7 +381,9 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
             push!(omegaz3, 2 * uz' * E1 * p1d)
             push!(theta3, theta3[n - 1] + h * omegaz3[n])
         end
+        if app == 308       # 3 body
 
+        end
     end
     if app==4
         df = DataFrame()
@@ -461,7 +463,30 @@ function test_EI0(; app::Int=6, tspan::Tuple{Float64,Float64}=(0.0, 5.0))
         display_figures_for_body2(t,theta3,omegaz3)
         display_figures_for_body3(t, Q)
     end
-    col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
+    if app==308
+        t=t[1:n]
+        Q=Q[:, 1:n]
+        df = DataFrame()
+        df[!, "t"] = t
+        df[!, "x1"] = Q[1, :]
+        df[!, "y1"] = Q[2, :]
+        df[!, "z1"] = Q[3, :]
+        df[!, "x2"] = Q[1+7, :]
+        df[!, "y2"] = Q[2+7, :]
+        df[!, "z2"] = Q[3+7, :]
+        df[!, "x3"] = Q[1+7+7, :]
+        df[!, "y3"] = Q[2+7+7, :]
+        df[!, "z3"] = Q[3+7+7, :]
+
+
+        CSV.write("jl_solver.csv", df)
+
+        display_figures_for_body(1,t,Q)
+        display_figures_for_body(2,t,Q)
+        display_figures_for_body(3,t,Q)
+        display_figures_for_body3(t, Q)
+    end
+    #col_names = ["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"]
 
     # println("u₀=", u₀)
     # println("du₀=", du₀)
@@ -564,4 +589,4 @@ using ProfileView
 #save(sol)
 
 #using BenchmarkTools
-@time test_EI0(app=307, tspan=(0.0, .1))
+@time test_EI0(app=308, tspan=(0.0, .1))

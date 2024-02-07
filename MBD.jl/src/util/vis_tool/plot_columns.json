@@ -1,0 +1,7 @@
+
+{
+    "subplots": {
+        "subplot1": ["cm_Y", "MR_Y","LR_Y", "U_Y"],
+        "subplot2": ["MR_FY","MF_FY"]
+    }
+}
