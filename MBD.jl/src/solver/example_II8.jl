@@ -579,14 +579,18 @@ function save(sol)
     CSV.write("jl_solver.csv", df)
 end
 
-using ProfileView
+#using ProfileView
 #@ProfileView.profview test_EI0(app=4, tspan=(0.0, 0.1))  # run once to trigger compilation (ignore this one)
 #@ProfileView.profview test_EI0(app=4, tspan=(0.0, 1.0))
 #sol = test_EI0(app=6, tspan=(0.0, 1.0))
 #test_EI0(app=209, tspan=(0.0, 0.5))
-#test_EI0(app=307, tspan=(0.0, 0.5))
+#test_EI0(app=308, tspan=(0.0,3.5))
 #draw(sol)
 #save(sol)
 
 #using BenchmarkTools
+# using ProfileView
+# @ProfileView.profview test_EI0(app=308, tspan=(0.0, .1))
+using BenchmarkTools
 @time test_EI0(app=308, tspan=(0.0, .1))
+@time test_EI0(app=308, tspan=(0.0, 3.5))

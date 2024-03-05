@@ -484,7 +484,8 @@ end
 
 function csign(a, par)
     nb, ngc, nh, nc, nv, nu, g, utol, Btol, intol, Atol, Vtol, hvar, NTSDA, vt = parPart(par)
-
+    csa=0
+    dcsa=0
     # Continuous sign function
     if abs(a) > vt
         csa = sign(a)

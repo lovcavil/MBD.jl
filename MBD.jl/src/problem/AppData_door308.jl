@@ -53,7 +53,7 @@ function model_door_308_spline()
     si1pr3= fixrootrollerMG-rMA
     SJDT[:, 3] = Any[1030, 2, 0, si1pr3..., zer..., 999.4630310344, zer..., zer..., zer..., zer..., 0.0, 0.0, 0.0, 0.0, 0, 0]
 
-    fixrootrollerLG=json_data["fixrootrollerMG"]
+    fixrootrollerLG=json_data["fixrootrollerLG"]
     si1pr4= fixrootrollerLG-rLA
     SJDT[:, 4] = Any[1030, 3, 0, si1pr4..., zer..., -22.7978911861, zer..., zer..., zer..., zer..., 0.0, 0.0, 0.0, 0.0, 0, 0]
 
