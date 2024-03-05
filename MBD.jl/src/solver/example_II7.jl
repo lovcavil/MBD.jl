@@ -7,84 +7,6 @@ using Sundials
 using Plots
 using CSV, DataFrames
 
-function test_II1()
-
-    h0 = 0.001       # Initial time step
-    hvar=0
-    g = 9.81
-
-    # Application Data Function
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(201)
-    par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
-
-    # Integration P
-    t=0.0
-    tspan = (0.0, 1.0)
-    println("START")
-    qdd, Lam, ECond=mathfunction.ODEfunct(t, q, qd, SMDT, STSDAT, SJDT, par)
-    u₀  = vcat(q,Lam,qd)
-    du₀ = vcat(qd,zeros(nc),qdd)
-
-    differential_vars = create_bool_vector(nb, nc)
-    simulation_params_dict = Dict(
-        :g => 9.81,       
-        :SMDT => SMDT,                   
-        :STSDAT => STSDAT,               
-        :SJDT => SJDT,                   
-        :par => par                     
-    )
-    println("u₀=",u₀)
-    println("du₀=",du₀)
-    println("differential_vars=",differential_vars)  # 输出 differential_vars 的值
-
-    prob = DAEProblem(implicitdae, du₀, u₀,tspan, simulation_params_dict, differential_vars=differential_vars)
-
-    # Integration
-    default_solve_kwargs = Dict(:alg=>IDA(), :reltol=>1e-6, :abstol=>1e-6, :progress=>true,:dtmin=>0.00001)
-    sol = solve(prob; default_solve_kwargs...)
-
-    return sol
-end
-
-function test_II3()
-
-    h0 = 0.001       # Initial time step
-    hvar=0
-    g = 9.81
-
-    # Application Data Function
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(201)
-    par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
-
-    # Integration P
-    t=0.0
-    tspan = (0.0, 1.0)
-    println("START")
-    qdd, Lam, ECond=mathfunction.ODEfunct(t, q, qd, SMDT, STSDAT, SJDT, par)
-    u₀  = vcat(q,Lam,qd)
-    du₀ = vcat(qd,zeros(nc),qdd)
-
-    differential_vars = create_bool_vector(nb, nc)
-    simulation_params_dict = Dict(
-        :g => 9.81,       
-        :SMDT => SMDT,                   
-        :STSDAT => STSDAT,               
-        :SJDT => SJDT,                   
-        :par => par                     
-    )
-    println("u₀=",u₀)
-    println("du₀=",du₀)
-    println("differential_vars=",differential_vars)  # 输出 differential_vars 的值
-
-    prob = DAEProblem(implicit3dae, du₀, u₀,tspan, simulation_params_dict, differential_vars=differential_vars)
-
-    # Integration
-    default_solve_kwargs = Dict(:alg=>IDA(), :reltol=>1e-6, :abstol=>1e-6, :progress=>true,:dtmin=>0.00001)
-    sol = solve(prob; default_solve_kwargs...)
-
-    return sol
-end
-
 function test_EI1(;app::Int=208,tspan::Tuple{Float64, Float64}=(0.0, 5.0))
     # CAKD initialization
     # & Application Data Function
@@ -138,7 +60,7 @@ function save(sol)
     CSV.write("jl_solver.csv", df)
 end
 
-sol=test_EI1(app=306,tspan=(0.0, 1.0))
+sol=test_EI1(app=205,tspan=(0.0, 5.0))
 
 draw(sol)
 save(sol)
