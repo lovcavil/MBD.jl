@@ -6,4 +6,5 @@
 
 #import Pkg; Pkg.add("ProgressLogging")
 #import Pkg; Pkg.add("LSODA")
-import Pkg; Pkg.add("JSON")
+#import Pkg; Pkg.add("JSON")
+import Pkg; Pkg.add("Cassette")
