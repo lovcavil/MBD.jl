@@ -343,7 +343,6 @@ function AppData_II7(app)
         SJDT[:, 2] = Any[1010, 1, 0, si3pr..., sj3pr..., 0, zer..., zer..., zer..., zer...]  # Spherical Joint - Body 1 and Ground
         # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
         # SMDT = [[m1, J11, J12, J13], ..., [mnb, Jnb1, Jnb2, Jnb3]]
-        #SMDT = hcat(vcat(30, 90, 90, 30), vcat(30, 90, 90, 30))
         SMDT = hcat(vcat(30, 90, 90, 90))
         # STSDAT(12, 1): TSDA Data Table
         STSDAT = NTSDA == 0 ? zeros(12, NTSDA) : []  # Initialize if NTSDA == 0
@@ -352,13 +351,10 @@ function AppData_II7(app)
         r10 = [1, 1, 0]
         p10 = [1, zer...]
 
-        #q0 = [r10..., p10...,r20..., p20...]
         q0 = [r10..., p10...]
         omeg1pr0 = [0, 0, 0]
-        #A=mathfunction.ATran(p10)
         r1d0 = mathfunction.ATran(p10) * mathfunction.atil(omeg1pr0) * si1pr
         p1d0 = 0.5 * mathfunction.GEval(p10)' * omeg1pr0
-        #qd0 = [r1d0..., p1d0...,r2d0..., p2d0...]
         qd0 = [r1d0..., p1d0...]
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0
     end

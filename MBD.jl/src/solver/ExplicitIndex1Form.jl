@@ -18,16 +18,10 @@ export odequation
     # b=vcat(Qa, -q_v[1]^2 - q_v[2]^2 - q_v[3]^2)
 
 
-function ode_rhs(tnm,qnm,qdnm,SMDT, STSDAT, SJDT, par)
-    nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = mathfunction.parPart(par)
-
-end
-
-
 function odequation(du, u, p, t)
     SMDT, STSDAT, SJDT, par = p
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = mathfunction.parPart(par)
-    
+
     sec1=1:nb*7
     sec2=nb*7+1:nb*7+nc
     sec3=nb*7+nc+1:nb*14+nc
