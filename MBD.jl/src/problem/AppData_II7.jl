@@ -320,7 +320,7 @@ function AppData_II7(app)
         #w1=2*mathfunction.EEval(p10)*p1d0
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0
     end
-    if app == 205  # single Pendulum+plainer x=1  Spherical to Ground
+    if app ==205 ||app==209  # single Pendulum+plainer x=1  Spherical to Ground
         nb = 1         # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
         nh = 2        # Number of holonomic constraints
@@ -356,7 +356,11 @@ function AppData_II7(app)
         r1d0 = mathfunction.ATran(p10) * mathfunction.atil(omeg1pr0) * si1pr
         p1d0 = 0.5 * mathfunction.GEval(p10)' * omeg1pr0
         qd0 = [r1d0..., p1d0...]
-        return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0
+        p_contact=0
+        if app==209
+            p_contact=1
+        end
+        return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0,p_contact
     end
     if app == 206  # single Pendulum+plainer x=0  Spherical to Ground
         nb = 1         # Number of bodies

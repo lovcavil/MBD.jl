@@ -8,6 +8,7 @@ include("./constraint/constraint_fPy.jl")
 include("./constraint/constraint_fPz.jl")
 include("./constraint/constraint_fP.jl")
 include("./constraint/constraint_Poly.jl")
+include("./eval/QAC.jl")
 export add_constraint!
 export atilde
 export ATran,BTran,qPart,bbP2dist,bbP2dot1,bbP2dot2,bbP2RotDr,bbP2sph
@@ -1111,10 +1112,13 @@ function SqqdEval(q, qd, SMDT, par)
     return Ssq, Ssqd
 end
 
+
 function TEval(a)
     T =vcat( hcat(0,-a'),hcat( a,-atil(a)))
     return T
 end
+
+
 function ODEfunct(tn, q, qd, SMDT, STSDAT, SJDT, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
 
@@ -1484,6 +1488,7 @@ function P2Eval(tn,q,qd,SJDT,par)
     return P2
 end
 
+
 function P4Eval(tn, q, eta, SJDT, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
 
@@ -1685,8 +1690,6 @@ function computeDriverInputs(u1pr, v1pr, u2pr, A1, theta, thetad, thetadd, j, q)
 
     return PD, PDd, PDdd
 end
-
-
 
 
 function PhiEval(tn, q, SJDT, par)

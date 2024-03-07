@@ -1,5 +1,5 @@
 # Import necessary packages
-include("./problem/AppData_II7.jl")
+include("./problem/AD_contact.jl")
 include("./solver/solver.jl")
 
 using LinearAlgebra, DifferentialEquations, OrdinaryDiffEq, Sundials, Plots, CSV, DataFrames
@@ -24,7 +24,7 @@ function run(params::ODEParams, results::ODERunResults)
     h0, hvar, g = 0.001, 0, 9.81
 
     # Load application data
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd = AppData_II7(params.app)
+    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = AD(params.app)
     par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
 
     # Correction step
@@ -33,7 +33,7 @@ function run(params::ODEParams, results::ODERunResults)
     u₀, du₀ = vcat(q, Lam, qd), vcat(qd, zeros(nc), qdd)
 
     # Problem setup
-    p = [SMDT, STSDAT, SJDT, par]
+    p = [SMDT, STSDAT, SJDT, par, p_contact]
     prob = ODEProblem(odequation, u₀, params.tspan, p)
 
     # Solve ODE
