@@ -1,5 +1,5 @@
 include("base.jl")
 include("../mathfunction_II7.jl")
 include("ExplicitIndex1FormQAC.jl")
-include("ImplicitIndex1Form.jl")
-include("ImplicitIndex3Form.jl")
+#include("ImplicitIndex1Form.jl")
+#include("ImplicitIndex3Form.jl")

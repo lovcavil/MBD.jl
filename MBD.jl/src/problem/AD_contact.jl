@@ -1,7 +1,7 @@
 using LinearAlgebra
 include("../mathfunction_II7.jl")
 function AD(app)
-    if app ==205 ||app==209||app==210  # single Pendulum+plainer x=1  Spherical to Ground
+    if app ==205 ||app==209||app==210||app==211||app==212  # single Pendulum+plainer x=1  Spherical to Ground
         nb = 1         # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
         nh = 2        # Number of holonomic constraints
@@ -42,11 +42,64 @@ function AD(app)
             p_contact=Any[0,0]
         end
         if app==209
-            p_contact=Any[1,50]
+            p_contact=Any[1,1000]
+            contact_mg=Dict(
+                "b" => 1,
+                "pos" => -0.5, 
+                )
+         
+            ld_contact=[contact_mg,]
+            damper=Dict(
+                "b" => 1,
+                "damp" => 1, 
+                )
+         
+            ld_damper=[damper,]
+            p_contact=Any[ld_damper,ld_contact]
         end
         if app==210
-            p_contact=Any[1,500]
+            contact_mg=Dict(
+                "b" => 1,
+                "pos" => -0.5, 
+                )
+            ld_contact=[contact_mg,]
+            damper=Dict(
+                "b" => 1,
+                "damp" => 100, 
+                )
+         
+            ld_damper=[damper,]
+            p_contact=Any[ld_damper,ld_contact]
+        end
+        if app==211
+            contact_mg=Dict(
+                "b" => 1,
+                "pos" => -0.5, 
+                )
+            ld_contact=[contact_mg,]
+            damper=Dict(
+                "b" => 1,
+                "damp" => 500, 
+                )
+         
+            ld_damper=[damper,]
+            p_contact=Any[ld_damper,ld_contact]
+        end
+        if app==212
+            contact_mg=Dict(
+                "b" => 1,
+                "pos" => -0.5, 
+                )
+            ld_contact=[contact_mg,]
+            damper=Dict(
+                "b" => 1,
+                "damp" => 1000, 
+                )
+         
+            ld_damper=[damper,]
+            p_contact=Any[ld_damper,ld_contact]
         end
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0,p_contact
     end    
 end
+

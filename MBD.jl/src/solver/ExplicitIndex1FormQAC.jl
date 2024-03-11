@@ -2,15 +2,16 @@ using LinearAlgebra
 using Plots
 using DifferentialEquations
 using OrdinaryDiffEq, ProgressLogging
-using Sundials
+#using Sundials
 using Printf
-using LSODA
+#using LSODA
 export odequation
 
 function odequation(du, u, p, t)
+    # println("t $t")
     SMDT, STSDAT, SJDT, par, p_contact = p
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = mathfunction.parPart(par)
-    #a1,a2=p_contact
+
     sec1=1:nb*7
     sec2=nb*7+1:nb*7+nc
     sec3=nb*7+nc+1:nb*14+nc
@@ -31,5 +32,4 @@ function odequation(du, u, p, t)
     du[sec1]=u[sec3]
     du[sec2]=res[sec2]
     du[sec3] = res[sec1]
-
 end
