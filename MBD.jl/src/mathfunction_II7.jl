@@ -1253,7 +1253,6 @@ function P3Eval(tn, q, qd, SJDT, par)
     return P3
 end
 
-
 function P2Eval(tn,q,qd,SJDT,par)
     # x=qd
     # Retrieve parameters from 'par'
@@ -1376,6 +1375,27 @@ function P2Eval(tn,q,qd,SJDT,par)
                 P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
             end
             m += 1
+        elseif constraintType == 20
+
+            i, j, s1pr, s2pr, vx1pr, vz1pr, vx2pr, vz2pr = TranPart(k, SJDT)
+            vy1pr = atil(vz1pr) * vx1pr
+            vy2pr = atil(vz2pr) * vx2pr
+
+            P2cyl11, P2cyl12 = bbP2dot2(i, j, vx2pr, s1pr, s2pr,tn, q, qd, par)
+            P2cyl21, P2cyl22 = bbP2dot2(i, j, vy2pr, s1pr, s2pr,tn, q, qd, par)
+            P2cyl31, P2cyl32 = bbP2dot1(i, j, vz1pr, vx2pr,tn, q, qd, par)
+            P2cyl41, P2cyl42 = bbP2dot1(i, j, vz1pr, vy2pr,tn, q, qd, par)
+            P2rev51, P2rev52 = bbP2dot2(i, j, vz2pr, s1pr, s2pr,tn, q, qd, par)
+            P2tran61, P2tran62 = bbP2dot1(i, j, vy1pr, vx2pr,tn, q, qd, par)
+
+            P21k = vcat(P2cyl11, P2cyl21, P2cyl31, P2cyl41,P2rev51, P2tran61)
+            P22k = vcat(P2cyl12, P2cyl22, P2cyl32, P2cyl42,P2rev52, P2tran62)
+
+            P2 = add_constraint!(P2, P21k, m, 7 * (i - 1))
+            if j >= 1
+                P2 = add_constraint!(P2, P22k, m, 7 * (j - 1))
+            end
+            m += 6           
         elseif constraintType == 1010  
             # Check if the constraint type is a Distance Constraint
             # Extract parameters for the Distance Constraint
@@ -1487,7 +1507,6 @@ function P2Eval(tn,q,qd,SJDT,par)
 
     return P2
 end
-
 
 function P4Eval(tn, q, eta, SJDT, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
@@ -1652,7 +1671,6 @@ function P4Eval(tn, q, eta, SJDT, par)
     return P4
 end
 
-
 function P5Eval(tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
 
@@ -1664,7 +1682,6 @@ function P5Eval(tn, q, par)
 
     return Pst, Pstt, Pstq, Psttq
 end
-
 
 function computeDriverInputs(u1pr, v1pr, u2pr, A1, theta, thetad, thetadd, j, q)
     c = s = PD = PDd = PDdd = 0
@@ -1690,7 +1707,6 @@ function computeDriverInputs(u1pr, v1pr, u2pr, A1, theta, thetad, thetadd, j, q)
 
     return PD, PDd, PDdd
 end
-
 
 function PhiEval(tn, q, SJDT, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
@@ -1767,6 +1783,24 @@ function PhiEval(tn, q, SJDT, par)
             Phi = add_constraint!(Phi, Phik, m, 0)
             m += 1
         end
+        if SJDT[1, k] == 20# fix body
+            
+            i, j, s1pr, s2pr, ux1pr, uz1pr, ux2pr, uz2pr = TranPart(k, SJDT)
+
+            uy1pr = atil(uz1pr) * ux1pr
+            uy2pr = atil(uz2pr) * ux2pr
+
+            Phicyl1 = bbPhidot2(i, j, ux2pr, s1pr, s2pr, tn, q, par)
+            Phicyl2 = bbPhidot2(i, j, uy2pr, s1pr, s2pr, tn, q, par)
+            Phicyl3 = bbPhidot1(i, j, uz1pr, ux2pr, tn, q, par)
+            Phicyl4 = bbPhidot1(i, j, uz1pr, uy2pr, tn, q, par)
+            Phirev5 = bbPhidot2(i, j, uz2pr, s1pr, s2pr, tn, q, par)
+            Phitran6 = bbPhidot1(i, j, uy1pr, ux2pr, tn, q, par)
+
+            Phik = vcat(Phicyl1, Phicyl2, Phicyl3, Phicyl4, Phirev5, Phitran6)
+            Phi = add_constraint!(Phi, Phik, m, 0)
+            m += 6
+        end
         # fxc Constraint
         if SJDT[1, k] == 1010
             i, j, s1pr, s2pr, d = DistPart(k, SJDT)
@@ -1816,9 +1850,6 @@ function PhiEval(tn, q, SJDT, par)
     #println("Phi",Phi)
     return Phi
 end
-
-
-
 
 function PhiqEval(tn, q, SJDT, par)
 
@@ -1915,6 +1946,34 @@ function PhiqEval(tn, q, SJDT, par)
                 Phiq = add_constraint!(Phiq, Phiq2, m, 7 * (j - 1))
             end
             m += 1
+        end
+
+                # Revolute Constraint
+
+        # Revolute Constraint
+        if SJDT[1, k] == 20
+
+            i, j, s1pr, s2pr, ux1pr, uz1pr, ux2pr, uz2pr = TranPart(k, SJDT)
+            uy1pr = atil(uz1pr) * ux1pr
+            uy2pr = atil(uz2pr) * ux2pr
+        
+            Phiqcyl11, Phiqcyl12 = bbPhiqdot2(i, j, ux2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl21, Phiqcyl22 = bbPhiqdot2(i, j, uy2pr, s1pr, s2pr, tn, q, par)
+            Phiqcyl31, Phiqcyl32 = bbPhiqdot1(i, j, uz1pr, ux2pr, tn, q, par)
+            Phiqcyl41, Phiqcyl42 = bbPhiqdot1(i, j, uz1pr, uy2pr, tn, q, par)
+            Phiqrev51, Phiqrev52 = bbPhiqdot2(i, j, uz2pr, s1pr, s2pr,tn, q, par)
+            Phiqtran61, Phiqtran62 = bbPhiqdot1(i, j, uy1pr, ux2pr, tn, q, par)
+        
+            Phiq1k = vcat(Phiqcyl11, Phiqcyl21, Phiqcyl31, Phiqcyl41,Phiqrev51, Phiqtran61)
+            Phiq2k = vcat(Phiqcyl12, Phiqcyl22, Phiqcyl32, Phiqcyl42,Phiqrev52, Phiqtran62)
+        
+            Phiq = add_constraint!(Phiq, Phiq1k, m, 7 * (i - 1))
+        
+            if j >= 1
+                Phiq = add_constraint!(Phiq, Phiq2k, m, 7 * (j - 1))
+            end
+        
+            m += 6
         end
 
         # ... (Continue with the rest of the constraints as per the given code)
