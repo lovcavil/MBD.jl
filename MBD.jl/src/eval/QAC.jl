@@ -4,7 +4,6 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
     ld_damper, ld_contact = p_contact
     uz = [0; 0; 1]
     uy = [0; 1; 0]
-    println("tn $tn")
     QAC = zeros(ngc)
     for d_damper in ld_damper
         # Account for gravitational force in negative y direction

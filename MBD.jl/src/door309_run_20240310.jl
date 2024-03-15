@@ -6,8 +6,6 @@ include("./eval/contact.jl")
 using LinearAlgebra, DifferentialEquations, OrdinaryDiffEq, Sundials, Plots, CSV, DataFrames
 using DiffEqCallbacks
 
-
-
 # Define a struct to encapsulate parameters for the ODE problem
 struct ODEParams
     app::Int

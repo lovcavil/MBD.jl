@@ -1253,6 +1253,7 @@ function P3Eval(tn, q, qd, SJDT, par)
     return P3
 end
 
+
 function P2Eval(tn,q,qd,SJDT,par)
     # x=qd
     # Retrieve parameters from 'par'
@@ -1508,6 +1509,7 @@ function P2Eval(tn,q,qd,SJDT,par)
     return P2
 end
 
+
 function P4Eval(tn, q, eta, SJDT, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
 
@@ -1671,6 +1673,7 @@ function P4Eval(tn, q, eta, SJDT, par)
     return P4
 end
 
+
 function P5Eval(tn, q, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
 
@@ -1682,6 +1685,7 @@ function P5Eval(tn, q, par)
 
     return Pst, Pstt, Pstq, Psttq
 end
+
 
 function computeDriverInputs(u1pr, v1pr, u2pr, A1, theta, thetad, thetadd, j, q)
     c = s = PD = PDd = PDdd = 0
@@ -1707,6 +1711,7 @@ function computeDriverInputs(u1pr, v1pr, u2pr, A1, theta, thetad, thetadd, j, q)
 
     return PD, PDd, PDdd
 end
+
 
 function PhiEval(tn, q, SJDT, par)
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
@@ -1850,6 +1855,9 @@ function PhiEval(tn, q, SJDT, par)
     #println("Phi",Phi)
     return Phi
 end
+
+
+
 
 function PhiqEval(tn, q, SJDT, par)
 

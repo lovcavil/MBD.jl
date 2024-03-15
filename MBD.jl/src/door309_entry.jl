@@ -5,9 +5,10 @@ include("./door309_run_20240310.jl")
 function main()
     results = ODERunResults([],[])
 
-    params1 = ODEParams(310, (0.0, 1), Dict(:alg => Tsit5(), :reltol => 1e-5, :abstol => 1e-5, :progress => true))
-    run(params1, results)
-
+    # params1 = ODEParams(310, (0.0, 0.5), Dict(:alg => Tsit5(), :reltol => 1e-5, :abstol => 1e-5, :progress => true))
+    # run(params1, results)
+    params2 = ODEParams(311, (0.0, 0.2), Dict(:alg => Tsit5(), :reltol => 1e-5, :abstol => 1e-5, :progress => true))
+    run(params2, results)
     dfs=results.l_saved_data
 
     groups=[]

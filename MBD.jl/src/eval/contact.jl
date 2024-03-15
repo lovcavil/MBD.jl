@@ -28,7 +28,7 @@ function calculate_F_flore_Abs(q::Float64, v::Float64, flag_move_dir::Int, Eeq::
     # end
     v = v * flag_move_dir
     init_vel = -abs(init_vel)
-    init_vel=0.0
+    #init_vel=0.0
     Fd = Eeq * (q / F2)^1.5
     if init_vel != 0.0
         Fd *= (1.0 + 8.0 * (1.0 - E2) * v / (5.0 * E2 * init_vel))

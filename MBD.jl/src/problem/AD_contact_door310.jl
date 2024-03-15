@@ -37,7 +37,7 @@ end
 
 
 function AD310(app)
-    if app == 310
+    if app >= 310 && app < 399
         script_dir = @__DIR__
 
         # Build the path to the JSON file
@@ -163,6 +163,9 @@ function AD310(app)
 
         # Initial velocities for 'r' bodies - first body has a unique velocity
         rd_initials = [0., 0., 0.]
+        if app==311
+            rd_initials = [-1000., 0., 0.]
+        end
         # Constructing q0 and qd0 using loops
         q0 = Float64[]
         qd0 = Float64[]
@@ -182,14 +185,7 @@ function AD310(app)
             "b" => 5,
             "pos" => -22.7978911861,
         )
-        contact_g = Dict(
-            "b" => 1,
-            "pos" => 634.2367244142,
-        )
-        contact_g1 = Dict(
-            "b" => 1,
-            "pos" => -634.2367244142,
-        )
+
         ld_contact =[contact_mg,contact_lg]# [contact_mg, contact_lg]
         damper_mg = Dict(
             "b" => 4,
@@ -199,10 +195,7 @@ function AD310(app)
             "b" => 5,
             "damp" => 10000,
         )
-        damper_g = Dict(
-            "b" => 1,
-            "damp" => 10000,
-        )
+
         ld_damper = [damper_lg,  damper_mg]#damper_g
         p_contact = Any[ld_damper, ld_contact]
 
