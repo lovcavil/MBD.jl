@@ -3,41 +3,9 @@ using JSON
 using DelimitedFiles
 using Dierckx
 
-struct AppDataStruct
-    name::String
-    nb::Int
-    ngc::Int
-    nh::Int
-    nc::Int
-    NTSDA::Int
-    SJDT::Array{Any}
-    SMDT::Array
-    STSDAT
-    q0::Array
-    qd0::Array
-end
-
-function fit_xycurve(csvfile="", degree=3)
-    # Define the function to get the directory of the file
-    file_dir = @__DIR__ # Implement this function as needed
-
-    # Load data from CSV
-    full_path = joinpath(file_dir, csvfile)
-    arr = readdlm(full_path, ',', skipstart=1)
-    x = arr[:, 1]
-    y = arr[:, 2]
-    #z = arr[:, 3]
-    sort_indices = sortperm(x)
-    x_sorted = x[sort_indices]
-    y_sorted = y[sort_indices]
-    # Fit the spline
-    spline = Spline1D(x_sorted, y_sorted, k=degree)
-    return spline
-end
-
 
 function AD310(app)
-    if app >= 310 && app < 399
+    if app >= 310 && app < 320
         script_dir = @__DIR__
 
         # Build the path to the JSON file

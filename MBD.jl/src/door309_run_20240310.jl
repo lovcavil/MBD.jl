@@ -1,6 +1,5 @@
 # Import necessary packages
-include("./problem/AD_contact_door309.jl")
-include("./problem/AD_contact_door310.jl")
+include("./problem/AD_contact_door_base.jl")
 include("./solver/solver.jl")
 include("./eval/contact.jl")
 using LinearAlgebra, DifferentialEquations, OrdinaryDiffEq, Sundials, Plots, CSV, DataFrames
@@ -21,6 +20,14 @@ end
 include("./post/save.jl")
 include("./post/draw.jl")
 
+# Function to generate a tuple type for SavedValues
+function create_saved_values_type(num_float64::Int)
+    # Generate a tuple type with `num_float64` Float64 elements
+    return Tuple{fill(Float64, num_float64)...}
+end
+
+
+
 # Define a function to run a specific ODE problem
 function run(params::ODEParams, results::ODERunResults)
     # Constants and initial conditions
@@ -28,7 +35,7 @@ function run(params::ODEParams, results::ODERunResults)
 
     # Load application data
     #nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = AD(params.app)
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = AD310(params.app)
+    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = appdata(params.app)
     par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
 
     # Correction step
@@ -49,20 +56,32 @@ function run(params::ODEParams, results::ODERunResults)
     index3=(3-1)*7+3
     index4=(4-1)*7+3
     index5=(5-1)*7+3
-    indexmf=(4-1)*7+2
-    indexmr=(5-1)*7+2
+    indexmf=(6-1)*7+2
+    indexmr=(7-1)*7+2
     indexlf=(4-1)*7+2
     indexlr=(5-1)*7+2
     indexu=(4-1)*7+2
     save_func(u, t, integrator) = (u[1] + u[2], t^2,calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
                                 calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
                                 u[index4]-p_contact[2][1]["pos"],u[index5]-p_contact[2][2]["pos"],
-                                0.,0.,0.,0.,0.
+                                calculate_Fy_prepare(p_contact[2][3],u[sec1],u[sec3]),
+                                calculate_Fy_prepare(p_contact[2][4],u[sec1],u[sec3]),
+                                u[indexmf-1]-p_contact[2][3]["guide"](u[indexmf-2]),
+                                u[indexmr-1]-p_contact[2][4]["guide"](u[indexmr-2]),0.
                                 )
-    saved_values = SavedValues(Float64, Tuple{Float64, Float64,
-     Float64, Float64, 
-     Float64, Float64, 
-     Float64, Float64, Float64, Float64, Float64})
+    # save_func(u, t, integrator) = (u[1] + u[2], t^2,calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
+    #                             calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
+    #                             u[index4]-p_contact[2][1]["pos"],u[index5]-p_contact[2][2]["pos"],
+    #                             0,0.,
+    #                             0,0.,0.
+    #                             )
+    # Example: Create a tuple type for saved values with 11 Float64 elements
+    saved_values = SavedValues(Float64, create_saved_values_type(11))
+
+    # saved_values = SavedValues(Float64, Tuple{Float64, Float64,
+    #  Float64, Float64, 
+    #  Float64, Float64, 
+    #  Float64, Float64, Float64, Float64, Float64})
 
     # save_func(u, t, integrator) = (u[1] + u[2], t^2)
     # saved_values = SavedValues(Float64, Tuple{Float64, Float64})

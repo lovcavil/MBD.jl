@@ -140,17 +140,15 @@ for (i, p) in enumerate(plots)
     savefig(p, filename)
 end
 end
-function draw3d(dfs; groups, plot3d::Bool=true)
+function draw3d(dfs; groups, plot3d::Bool=true, limits = Dict("x" => [4000, -4000], "y" => [1000, -1000], "z" => [3000, -1000]))
     colors = ["#012a4a", "#013a63", "#01497c", "#014f86", "#2a6f97", "#2c7da0", "#468faf", "#61a5c2", "#89c2d9", "#a9d6e5"]
     colors1 = ["#5f0f40", "#9a031e", "#fb8b24", "#e36414", "#0f4c5c"]
     plots = []
     line_styles = [:solid, :dash, :dot, :dashdot, :dashdotdot]
     p0 = plot(layout=(1, 1), legend=:topright, projection=:perspective)
     for group in groups
-            
-
             # Initialize limits
-            limits = Dict("x" => [4000, -4000], "y" => [1000, -1000], "z" => [3000, -1000])
+            #limits = Dict("x" => [4000, -4000], "y" => [1000, -1000], "z" => [3000, -1000])
 
             # for df in dfs
             #     x_vals, y_vals, z_vals = df[:, Symbol(group[1])], df[:, Symbol(group[2])], df[:, Symbol(group[3])]

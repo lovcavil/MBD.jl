@@ -10,19 +10,34 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
         b=d_damper["b"]
         damp=d_damper["damp"]
             # mi = SMDT[1, i]
-        index = 7 * (b - 1) + 3
-        QACi = vcat(-qd[index] * damp, -qd[index] * damp, -qd[index] * damp, zeros(4))
+        index1 = 7 * (b - 1) + 1
+        index2 = 7 * (b - 1) + 2
+        index3 = 7 * (b - 1) + 3
+        QACi = vcat(-qd[index1] * damp[1], -qd[index2] * damp[2], -qd[index3] * damp[3], zeros(4))
         QAC = add_constraint!(QAC, QACi, 7 * (b - 1), 0)
     end
 
     for d_contact in ld_contact
-        fz=calculate_F_prepare(d_contact,q,qd)
-        b=d_contact["b"]
-        index = 7 * (b - 1) + 3
-        # if b == 4
-        #         println("q[index]$(q[index]) d$delta_v v$vel_v inv$init_vel_v f$fz")
-        # end
-        QACi = vcat(0, 0, fz, zeros(4))
+        type=d_contact["type"]
+        QACi = vcat(0, 0, 0, zeros(4))
+        if type == "guide"
+            fy=calculate_Fy_prepare(d_contact,q,qd)
+            b=d_contact["b"]
+            index = 7 * (b - 1) + 2
+            println("fy = $fy")
+            QACi = vcat(0, fy,0, zeros(4))
+        elseif type == "pos"
+                println("pos")
+                fz=calculate_F_prepare(d_contact,q,qd)
+                b=d_contact["b"]
+                index = 7 * (b - 1) + 3
+                # if b == 4
+                #         println("q[index]$(q[index]) d$delta_v v$vel_v inv$init_vel_v f$fz")
+                # end
+                QACi = vcat(0, 0, fz, zeros(4))
+        end
+
+
         QAC = add_constraint!(QAC, QACi, 7 * (b - 1), 0)
     end
     return QAC

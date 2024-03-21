@@ -8,6 +8,7 @@ include("./constraint/constraint_fPy.jl")
 include("./constraint/constraint_fPz.jl")
 include("./constraint/constraint_fP.jl")
 include("./constraint/constraint_Poly.jl")
+include("./constraint/constraint_Spline.jl")
 include("./eval/QAC.jl")
 export add_constraint!
 export atilde
@@ -1486,7 +1487,25 @@ function P2Eval(tn,q,qd,SJDT,par)
             end
 
             # Increment the constraint counter
-            m += 1               
+            m += 1
+        elseif constraintType == 1070  
+            # Check if the constraint type is a Distance Constraint
+            # Extract parameters for the Distance Constraint
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+
+            # Compute P21 and P22 for the Distance Constraint
+            P21, P22 = bbP2_Spline(i, j, s1pr, s2pr, d,tn, q, qd, par)
+
+            # Add P21 to P2 at the appropriate location
+            P2 = add_constraint!(P2, P21, m, 7 * (i - 1))
+
+            # If j is not zero, add P22 as well
+            if j >= 1
+                P2 = add_constraint!(P2, P22, m, 7 * (j - 1))
+            end
+
+            # Increment the constraint counter
+            m += 1                
         # Check if the constraint type is a Spherical Constraint
           
         end
@@ -1838,6 +1857,12 @@ function PhiEval(tn, q, SJDT, par)
             Phi = add_constraint!(Phi, Phik, m, 0)
             m += 1
         end
+        if SJDT[1, k] == 1070
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+            Phik = bbPhi_Spline(i, j, s1pr, s2pr, d,tn, q, par)
+            Phi = add_constraint!(Phi, Phik, m, 0)
+            m += 1
+        end
         # ... (Continue with the rest of the constraints as per the given code)
 
         k += 1
@@ -2039,6 +2064,18 @@ function PhiqEval(tn, q, SJDT, par)
             i, j, s1pr, s2pr, d = DistPart(k, SJDT)
 
             Phiq1, Phiq2 = bbPhiq_Poly(i, j, s1pr, s2pr, d,tn, q, par)
+            Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
+
+            if j >= 1
+                Phiq = add_constraint!(Phiq, Phiq2, m, 7*(j-1))
+            end
+
+            m += 1
+        end
+        if SJDT[1, k] == 1070
+            i, j, s1pr, s2pr, d = DistPart(k, SJDT)
+
+            Phiq1, Phiq2 = bbPhiq_Spline(i, j, s1pr, s2pr, d,tn, q, par)
             Phiq = add_constraint!(Phiq, Phiq1, m, 7*(i-1))
 
             if j >= 1
