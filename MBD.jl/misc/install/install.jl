@@ -8,5 +8,7 @@
 #import Pkg; Pkg.add("LSODA")
 #import Pkg; Pkg.add("JSON")
 #import Pkg; Pkg.add("Cassette")
+# using Pkg
+# Pkg.add("DiffEqCallbacks")
 using Pkg
-Pkg.add("DiffEqCallbacks")
+Pkg.add("Alert")

@@ -24,7 +24,9 @@ function odequation(du, u, p, t)
 
     Phiq = mathfunction.PhiqEval(t, q, SJDT, par)
     QA = mathfunction.QAEval(t, q, dq, SMDT, STSDAT, par)
+    
     QAC = mathfunction.QACEval(t, q, dq, SMDT, STSDAT, par,p_contact)
+
     S = mathfunction.SEval(q, dq, SMDT, par)
     # println("S $S")
     # println("QA $QA")

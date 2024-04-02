@@ -1,10 +1,15 @@
 include("./contact.jl")
 function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
+    println("\nt=$tn\n")
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     ld_damper, ld_contact = p_contact
     uz = [0; 0; 1]
     uy = [0; 1; 0]
     QAC = zeros(ngc)
+    if tn>=0.5 && tn<=1.5
+        QACi = vcat(-40000.,0.,0., zeros(4))
+        QAC = add_constraint!(QAC, QACi, 7 * (1 - 1), 0)
+    end
     for d_damper in ld_damper
         # Account for gravitational force in negative y direction
         b=d_damper["b"]
@@ -21,13 +26,15 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
         type=d_contact["type"]
         QACi = vcat(0, 0, 0, zeros(4))
         if type == "guide"
-            fy=calculate_Fy_prepare(d_contact,q,qd)
             b=d_contact["b"]
             index = 7 * (b - 1) + 2
-            println("fy = $fy")
-            QACi = vcat(0, fy,0, zeros(4))
+            # fy=calculate_Fy_prepare(d_contact,q,qd)
+
+            fx,fy=calculate_contact_geo(d_contact,q,qd)
+            # println("fy = $fy")
+            QACi = vcat(fx, fy,0, zeros(4))
         elseif type == "pos"
-                println("pos")
+                # println("pos")
                 fz=calculate_F_prepare(d_contact,q,qd)
                 b=d_contact["b"]
                 index = 7 * (b - 1) + 3

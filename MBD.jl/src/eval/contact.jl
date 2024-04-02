@@ -1,3 +1,5 @@
+include("contact_geo.jl")
+
 function calculate_F_prepare(d_contact,q,qd)
     b=d_contact["b"]
     threshold=d_contact["pos"]

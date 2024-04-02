@@ -2,6 +2,7 @@
 include("./problem/AD_contact_door_base.jl")
 include("./solver/solver.jl")
 include("./eval/contact.jl")
+include("./mathfunction_II7.jl")
 using LinearAlgebra, DifferentialEquations, OrdinaryDiffEq, Sundials, Plots, CSV, DataFrames
 using DiffEqCallbacks
 
@@ -56,18 +57,34 @@ function run(params::ODEParams, results::ODERunResults)
     index3=(3-1)*7+3
     index4=(4-1)*7+3
     index5=(5-1)*7+3
-    indexmf=(6-1)*7+2
+    indexymf=(6-1)*7+2
     indexmr=(7-1)*7+2
     indexlf=(4-1)*7+2
     indexlr=(5-1)*7+2
     indexu=(4-1)*7+2
-    save_func(u, t, integrator) = (u[1] + u[2], t^2,calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
+    save_func(u, t, integrator) = (u[1] + u[2], t^2,
+                                calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
                                 calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
-                                u[index4]-p_contact[2][1]["pos"],u[index5]-p_contact[2][2]["pos"],
-                                calculate_Fy_prepare(p_contact[2][3],u[sec1],u[sec3]),
-                                calculate_Fy_prepare(p_contact[2][4],u[sec1],u[sec3]),
-                                u[indexmf-1]-p_contact[2][3]["guide"](u[indexmf-2]),
-                                u[indexmr-1]-p_contact[2][4]["guide"](u[indexmr-2]),0.
+                                u[index4]-p_contact[2][1]["pos"],
+                                u[index5]-p_contact[2][2]["pos"],
+                                calculate_contact_geo(p_contact[2][3],u[sec1],u[sec3])[2],
+                                calculate_contact_geo(p_contact[2][4],u[sec1],u[sec3])[2],
+                                u[indexymf]-p_contact[2][3]["guide"](u[indexymf-1]),
+                                u[indexmr]-p_contact[2][4]["guide"](u[indexmr-1]),
+                                u[nb*7+nc+indexymf],
+                                u[nb*7+nc+indexmr],
+                                float(size(mathfunction.PhiqEval(t,u[sec1],SJDT,par), 1)),
+                                float(size(mathfunction.PhiqEval(t,u[sec1],SJDT,par), 2)),
+                                float(size(u[sec2], 1)),
+                                float(size((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2], 1)),
+                                float(size((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2], 2)),
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[53],
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[54],
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[55],
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[56],
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[57],
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[58],
+                                ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[59]
                                 )
     # save_func(u, t, integrator) = (u[1] + u[2], t^2,calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
     #                             calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
@@ -76,7 +93,7 @@ function run(params::ODEParams, results::ODERunResults)
     #                             0,0.,0.
     #                             )
     # Example: Create a tuple type for saved values with 11 Float64 elements
-    saved_values = SavedValues(Float64, create_saved_values_type(11))
+    saved_values = SavedValues(Float64, create_saved_values_type(17+7))
 
     # saved_values = SavedValues(Float64, Tuple{Float64, Float64,
     #  Float64, Float64, 

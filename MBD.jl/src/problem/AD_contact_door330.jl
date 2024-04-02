@@ -12,8 +12,8 @@ function AD330(app)
         json_data = JSON.parsefile(json_path)
         nb = 3 + 7      # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
-        nh =    2 +        7 +         5      # Number of holonomic constraints
-        nhc =   10 +      7*6 +        5# Number of holonomic constraint equations
+        nh =    2 +        7 +         7      # Number of holonomic constraints
+        nhc =   10 +      7*6 +        7      # Number of holonomic constraint equations
 
         nc = nhc + nb   # Number of constraint equations
         NTSDA = 0       # Number of TSDA force elements
@@ -89,13 +89,13 @@ function AD330(app)
         sj2pr9 = (revrootrollerU - rU)
         SJDT[:, 9] = Any[20, 1, 10, si1pr9..., sj2pr9..., 0, ux..., uz..., ux..., uz...]
 
-        # fixrootrollerMF = json_data["fixrootrollerMF"]
-        # si1pr10 = fixrootrollerMF - rMA
-        # SJDT[:, 10] = Any[1070, 6, 0, zer..., zer..., spl_dic["MF"], ux..., uz..., ux..., uz...]
+        fixrootrollerMF = json_data["fixrootrollerMF"]
+        si1pr10 = fixrootrollerMF - rMA
+        SJDT[:, 15] = Any[1070, 6, 0, zer..., zer..., spl_dic["MF"], ux..., uz..., ux..., uz...]
 
-        # fixrootrollerMR = json_data["fixrootrollerMR"]
-        # si1pr6 = fixrootrollerMR - rMA
-        # SJDT[:, 11] = Any[1070, 7, 0, zer..., zer..., spl_dic["MR"], ux..., uz..., ux..., uz...]
+        fixrootrollerMR = json_data["fixrootrollerMR"]
+        si1pr6 = fixrootrollerMR - rMA
+        SJDT[:, 16] = Any[1070, 7, 0, zer..., zer..., spl_dic["MR"], ux..., uz..., ux..., uz...]
 
         fixrootrollerLF = json_data["fixrootrollerLF"]
         si1pr11 = fixrootrollerLF - rLA
@@ -132,7 +132,7 @@ function AD330(app)
         # Initial velocities for 'r' bodies - first body has a unique velocity
         rd_initials = [0., 0., 0.]
 
-        rd_initials = [-1000., 0., 0.]
+        rd_initials = [-000., 00, 0.]
 
         # Constructing q0 and qd0 using loops
         q0 = Float64[]
@@ -145,6 +145,49 @@ function AD330(app)
             append!(qd0, pd_initial...)
         end
 
+        f1=0.97
+        AF=0.6
+        B5=-1.1#*testdir
+        damper=0
+        Eeq =1e9#4.5464758335e08
+        # damper=Eeq*0.0001
+        if app==330
+            Eeq =1e8
+            damper=1000
+            start_v=0.5
+            max_f=300
+            start_delta=0.1
+            faaa=1
+        end
+        if app==331
+            Eeq =1e8
+            damper=1000
+            start_v=0.5
+            max_f=300
+            start_delta=0.1
+            faaa=1
+        end
+        if app==332
+            Eeq =1e8
+            damper=1000
+            start_v=0.5
+            max_f=300
+            start_delta=0.1
+            faaa=1
+        end
+        if app==333
+            Eeq =1e8
+            damper=1000
+            start_v=0.5
+            max_f=300
+            start_delta=0.1
+            faaa=1
+        end
+
+        p_eff=[f1,AF,B5,Eeq,damper,start_v,max_f,start_delta,faaa]  
+        p_off=[f1,AF,B5,0.0,damper,start_v,max_f,start_delta,faaa]  
+        #d_contact["p"]
+        p=[f1,AF,B5,Eeq,damper,start_v,max_f,start_delta]  
         contact_mg = Dict(
             "type"=>"pos",
             "b" => 4,
@@ -159,31 +202,37 @@ function AD330(app)
             "type"=>"guide",
             "b" => 6,
             "guide" => spl_dic["MF"],
+            "p" => p_off,
         )
         contact_mr = Dict(
             "type"=>"guide",
             "b" => 7,
             "guide" => spl_dic["MR"],
+            "p" => p_off,
         )
 
         ld_contact =[contact_mg, contact_lg,contact_mf,contact_mr]# [contact_mg, contact_lg]
         damper_mg = Dict(
             "b" => 4,
-            "damp" => [0,0,1000],
+            "damp" => [0,0,0],
         )
         damper_lg = Dict(
             "b" => 5,
-            "damp" => [0,0,1000],
+            "damp" => [0,0,0],
         )
         damper_mf = Dict(
             "b" => 6,
-            "damp" => [0,1000,0],
+            "damp" => [0,0000,0]#[0,2000,0],
         )
         damper_mr = Dict(
             "b" => 7,
-            "damp" => [0,1000,0],
+            "damp" => [0,0000,0]#[0,2000,0],
         )
-        ld_damper = [damper_mg,  damper_lg,damper_mf,damper_mr]#damper_g
+        damper_door = Dict(
+            "b" => 1,
+            "damp" => [0,0000,0]#[0,2000,0],
+        )
+        ld_damper = [damper_door,  damper_lg,damper_mf,damper_mr]#damper_g
         p_contact = Any[ld_damper, ld_contact]
 
 
