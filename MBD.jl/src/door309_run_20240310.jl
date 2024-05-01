@@ -63,10 +63,10 @@ function run(params::ODEParams, results::ODERunResults)
     indexlr=(5-1)*7+2
     indexu=(4-1)*7+2
     save_func(u, t, integrator) = (u[1] + u[2], t^2,
-                                calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
-                                calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
-                                u[index4]-p_contact[2][1]["pos"],
-                                u[index5]-p_contact[2][2]["pos"],
+                                0,#calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
+                                0,#calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
+                                0,#u[index4]-p_contact[2][1]["pos"],
+                                0,#u[index5]-p_contact[2][2]["pos"],
                                 calculate_contact_geo(p_contact[2][3],u[sec1],u[sec3])[2],
                                 calculate_contact_geo(p_contact[2][4],u[sec1],u[sec3])[2],
                                 u[indexymf]-p_contact[2][3]["guide"](u[indexymf-1]),
@@ -86,25 +86,18 @@ function run(params::ODEParams, results::ODERunResults)
                                 ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[58],
                                 ((mathfunction.PhiqEval(t,u[sec1],SJDT,par))'*u[sec2])[59]
                                 )
-    # save_func(u, t, integrator) = (u[1] + u[2], t^2,calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
-    #                             calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
-    #                             u[index4]-p_contact[2][1]["pos"],u[index5]-p_contact[2][2]["pos"],
-    #                             0,0.,
-    #                             0,0.,0.
-    #                             )
+
     # Example: Create a tuple type for saved values with 11 Float64 elements
     saved_values = SavedValues(Float64, create_saved_values_type(17+7))
 
-    # saved_values = SavedValues(Float64, Tuple{Float64, Float64,
-    #  Float64, Float64, 
-    #  Float64, Float64, 
-    #  Float64, Float64, Float64, Float64, Float64})
+    cb1 = SavingCallback(save_func, saved_values)
 
-    # save_func(u, t, integrator) = (u[1] + u[2], t^2)
-    # saved_values = SavedValues(Float64, Tuple{Float64, Float64})
-    cb = SavingCallback(save_func, saved_values)
+    condition(u,t,integrator) = (u[1] < 2.14) 
+    affect!(integrator) = terminate!(integrator)
+    cb2 = DiscreteCallback(condition,affect!)
+
     # Solve ODE
-    sol = solve(prob; params.solve_kwargs..., callback = cb)
+    sol = solve(prob; params.solve_kwargs..., callback = CallbackSet(cb1,cb2))
 
 
     # # Access saved values
@@ -115,7 +108,7 @@ function run(params::ODEParams, results::ODERunResults)
     push!(results.l_saved_data, merge_df)
 end
 
-function merge_sol_result(sol,saved_values)
+function merge_sol_result2(sol,saved_values)
     df = DataFrame(Time=sol.t)
 
     # Add solution data to the DataFrame
@@ -129,5 +122,36 @@ function merge_sol_result(sol,saved_values)
         # Directly read and append the saved data to the DataFrame
         df[!, Symbol("ex_$i")] = [sd[i] for sd in saved_values.saveval]
     end
+    return df
+end
+
+function merge_sol_result(sol, saved_values)
+    df = DataFrame(Time=sol.t)
+
+    # Add solution data to the DataFrame
+    for i in 1:length(sol.u[1])
+        df[!, Symbol("sol_$i")] = getindex.(sol.u, i)
+    end
+
+    # Determine the length of data and handle mismatch in array sizes
+    n_time_steps = length(df.Time)
+    n_saved_steps = length(saved_values.saveval)
+    
+    # Append the saved data directly to the DataFrame, adjusting for length mismatch
+    for i in 1:length(saved_values.saveval[1])  # Assuming the first tuple represents the saved data structure
+        if n_saved_steps == n_time_steps
+            # If sizes match, append directly
+            df[!, Symbol("ex_$i")] = [sd[i] for sd in saved_values.saveval]
+        elseif n_saved_steps > n_time_steps
+            # If saved data is longer, truncate to match df
+            df[!, Symbol("ex_$i")] = [sd[i] for sd in saved_values.saveval[1:n_time_steps]]
+        else
+            # If saved data is shorter, pad with zeros
+            extended_data = [sd[i] for sd in saved_values.saveval]
+            append!(extended_data, zeros(n_time_steps - n_saved_steps))
+            df[!, Symbol("ex_$i")] = extended_data
+        end
+    end
+
     return df
 end

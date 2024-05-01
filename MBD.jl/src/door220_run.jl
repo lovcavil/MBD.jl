@@ -35,7 +35,7 @@ function run(params::ODEParams, results::ODERunResults)
 
     # Load application data
     #nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = AD(params.app)
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = appdata(params.app)
+    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = AD230(params.app)
     par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
 
     # Correction step

@@ -120,8 +120,8 @@ function AD230(app)
         json_data = JSON.parsefile(json_path)
         nb = 1      # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
-        nh = 1      # Number of holonomic constraints
-        nhc = 5 # Number of holonomic constraint equations
+        nh = 0      # Number of holonomic constraints
+        nhc = 0 # Number of holonomic constraint equations
 
         nc = nhc + nb   # Number of constraint equations
 
@@ -139,27 +139,12 @@ function AD230(app)
         # 6=Univ, 7=Strut, 8=Rev-Sph); i & j = bodies connected, i > 0; 1010=fxc
         # si & sjpr = vectors to Pi & Pj; d = dist.; uxipr, uzipr, uxjpr, uzjpr
         SJDT = Array{Any}(undef, 22, nh)
-        r_bodies = [1., 1.1, 0.]
+        r_bodies = [0.001, 0.0011, 0.]
         si1pr1 = ([0.,0.,0.]-r_bodies)
         sj2pr1 = [0.,0.,0.]
-        if app == 220
-            SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, -ux..., uy..., -ux..., uy...]#y
-        end
-        if app == 221
-            SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, ux..., uz..., ux..., uz...]#z
-        end
-        if app == 222
-            SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, uy..., uz..., uy..., uz...]#
-        end
-        if app == 223
-            SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, uy..., ux..., uy..., ux...]#x
-        end
-        if app == 224
-            SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, -uz..., ux..., -uz..., ux...]#x
-        end
-        if app == 225
-            SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, uz..., uy..., uz..., uy...]#y
-        end
+
+        # SJDT[:, 1] = Any[4, 1, 0, si1pr1..., sj2pr1..., 0, ux..., uz..., ux..., uz...]#z
+
         #SMDT = hcat(json_data["SMDT"]["mass1"], json_data["SMDT"]["mass2"])
          
         SMDT = hcat(vcat(30, 90, 90, 90))
@@ -172,7 +157,13 @@ function AD230(app)
         pd_initial = [0., 0., 0., 0.]  # Common initial 'pd' (velocity) for all 'p'
 
         # Initial velocities for 'r' bodies - first body has a unique velocity
-        rd_initials = [0., 0., 0.]
+        if app==230
+
+            rd_initials = [0., -0.600, 0.]
+        end
+        if app==231
+            rd_initials = [0., +0.600, 0.]
+        end
         # Constructing q0 and qd0 using loops
         q0 = Float64[]
         qd0 = Float64[]
@@ -184,16 +175,39 @@ function AD230(app)
             append!(qd0, pd_initial...)
         end
 
-        contact_mg = Dict(
-            "b" => 4,
-            "pos" => -999.4630310344,
-        )
-        contact_lg = Dict(
-            "b" => 5,
-            "pos" => -11122.7978911861,
+        if app == 230
+            Eeq = 1e8 #1e8
+            c_damper = 5e7 #5e6 # 1000
+            f_start_v = 0.02
+            f_max = 200
+            c_start_delta = 0.0001
+            faaa = 1
+            c_max_coeff_d=1#.010
+        end
+        if app==231
+            Eeq = 1e8 #1e8
+            c_damper = 8e7 #5e6 # 1000
+            f_start_v = 0.02
+            f_max = 200
+            c_start_delta = 0.0001
+            faaa = 1
+            c_max_coeff_d=2#.010
+        end
+        p_eff=[0,0,0,Eeq,c_damper,f_start_v,f_max,c_start_delta,faaa,c_max_coeff_d]  
+
+        x = [-10., 1., 2., 3., 4.]
+        y = [1.1, 1.1, 1.1, 1.1, 1.1]
+        spl = Spline1D(x, y)
+
+        contact_1 = Dict(
+            "type"=>"guide",
+            "b" => 1,
+            "guide" => spl,
+            "p" => p_eff,
         )
 
-        ld_contact =[contact_mg,contact_lg]# [contact_mg, contact_lg]
+        
+        ld_contact =[contact_1]# [contact_mg, contact_lg]
         damper_mg = Dict(
             "b" => 4,
             "damp" => 10000,
@@ -204,7 +218,7 @@ function AD230(app)
         )
 
         ld_damper = [damper_lg,  damper_mg]#damper_g
-        p_contact = Any[[], []]
+        p_contact = Any[[],ld_contact]
 
 
 

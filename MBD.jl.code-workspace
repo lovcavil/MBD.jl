@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../../A16.20240412.SolverCompare/20.Code"
 		}
 	],
 	"settings": {

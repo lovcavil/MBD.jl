@@ -3,18 +3,19 @@ include("./door309_run_20240310.jl")
 using Alert
 # Main entry function to control execution and comparison of different runs
 function main()
-    results = ODERunResults([],[])
-    time=2.2#2.2
-    params3 = ODEParams(330, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-3, :abstol => 1e-3, :dtmin=>1e-5, :dtmax=>1e-2, :progress => true))
-    run(params3, results)
-    params4 = ODEParams(331, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-3, :abstol => 1e-3, :dtmin=>1e-5, :dtmax=>1e-2, :progress => true))
-    # run(params4, results)
-    params5 = ODEParams(332, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-3, :abstol => 1e-3, :dtmin=>1e-5, :dtmax=>1e-2, :progress => true))
+    results= ODERunResults([],[])
+    time=2.2 #1.37#1.6#2.2
+    params3 = ODEParams(340, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-3, :abstol => 1e-3, :dtmin=>1e-6, :dtmax=>1e-2, :progress => true))
+    # run(params3, results)
+    params4 = ODEParams(341, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-5, :abstol => 1e-5, :dtmin=>1e-6, :dtmax=>1e-3, :progress => true))
+    run(params4, results)
+    params5 = ODEParams(342, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-3, :abstol => 1e-3, :dtmin=>1e-5, :dtmax=>1e-2, :progress => true))
     # run(params5, results)
     params6 = ODEParams(333, (0.0, time), Dict(:alg => Tsit5(), :reltol => 1e-3, :abstol => 1e-3, :dtmin=>1e-5, :dtmax=>1e-2, :progress => true))
     # run(params6, results)
     dfs=results.l_saved_data
-
+    save(dfs, filename="jl_solver_comparison.csv")
+    
     groups=[]
     push!(groups,[Symbol("sol_1"), Symbol("sol_2"), Symbol("sol_3")])
     push!(groups,[Symbol("sol_$i") for i in 3*7+1:3*7+3])
@@ -59,11 +60,12 @@ function main()
     # push!(groups,[Symbol("sol_$i") for i in [3*7+3]])
     # push!(groups,[Symbol("sol_$i") for i in [5*7+3]])
     # push!(groups,[Symbol("sol_$i") for i in [6*7+3]])
-    sec2=70
-    sec3=139
+    sec2=77
+    sec3=153
     s=1
     e=3
     push!(groups,[Symbol("sol_$i") for i in sec3+s:sec3+e])
+    push!(groups,[Symbol("sol_$i") for i in sec3+1:sec3+1])
     # push!(groups,[Symbol("sol_$i") for i in sec3+1*7+s:sec3+1*7+e])
     # push!(groups,[Symbol("sol_$i") for i in sec3+2*7+s:sec3+2*7+e])
     # push!(groups,[Symbol("sol_$i") for i in sec3+3*7+s:sec3+3*7+e])
@@ -104,7 +106,7 @@ function main()
     #draw(results, groups=[1:3,0*7+3:0*7+3,3*7+3:3*7+3,4*7+3:4*7+3],plot3d=false)
     # draw(results, groups=[65+1:65+3,65+0*7+3:65+0*7+3,65+3*7+3:65+3*7+3,65+4*7+3:65+4*7+3],plot3d=false)
     #save(results, filename="jl_solver_comparison.csv", col_names=["x1", "y1", "z1", "p1_1", "p1_2", "p1_3", "p1_4"])
-    save(dfs, filename="jl_solver_comparison.csv")
+
     alert("Your julia script is finished!")
 end
 
