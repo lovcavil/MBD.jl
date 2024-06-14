@@ -1,0 +1,1 @@
+cmd.exe /K "C:\Users\lovca\anaconda3\Scripts\activate.bat & conda activate pydy__env & jupyter notebook"

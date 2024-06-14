@@ -956,7 +956,7 @@ function QAEval(tn, q, qd, SMDT, STSDAT, par)
     # Account for gravitational force in negative y direction
     for i in 1:nb
         mi = SMDT[1, i]
-        QAGi = vcat(-mi * g * uy*(-1), zeros(4))
+        QAGi = vcat(-mi * g * uz, zeros(4))
 
         QA = add_constraint!(QA, QAGi, 7 * (i - 1), 0)
     end

@@ -53,26 +53,26 @@ function fit_xycurve_PUSH(csvfile="",degree=3)
     return spline
 end
 
-include("AD_contact_door310.jl")
-include("AD_contact_door320.jl")
-include("AD_contact_door330.jl")
-include("AD_contact_door340.jl")
+include("AD_contact_door341.jl")
+include("AD_contact_door350.jl")
+include("AD_contact_door355.jl")
 include("AD_220.jl")
+include("AD_240.jl")
 
-function appdata(app)
-    if app >= 310 && app < 320
-        return AD310(app)
-    end
-    if app >= 320 && app < 329
-        return AD320(app)
-    end
-    if app >= 330 && app < 339
-        return AD330(app)
-    end
+function appdata(app,contact_json="contact.json")
     if app >= 340 && app < 349
         return AD340(app)
     end
+    if app >= 350 && app < 355
+        return AD350(app,contact_json)
+    end
+    if app >= 355 && app < 359
+        return AD355(app,contact_json)
+    end    
     if app >= 220 && app < 229
         return AD220(app)
+    end
+    if app >= 240 && app < 249
+        return AD240(app)
     end
 end

@@ -1,14 +1,19 @@
 # Import necessary packages
+
+#cover the extra data output
+
 include("./problem/AD_contact_door_base.jl")
 include("./solver/solver.jl")
 include("./eval/contact.jl")
 include("./mathfunction_II7.jl")
+
 using LinearAlgebra, DifferentialEquations, OrdinaryDiffEq, Sundials, Plots, CSV, DataFrames
 using DiffEqCallbacks
 
 # Define a struct to encapsulate parameters for the ODE problem
 struct ODEParams
     app::Int
+    contact_json::String
     tspan::Tuple{Float64, Float64}
     solve_kwargs::Dict
 end
@@ -20,6 +25,7 @@ end
 
 include("./post/save.jl")
 include("./post/draw.jl")
+include("./post/recordTime.jl")
 
 # Function to generate a tuple type for SavedValues
 function create_saved_values_type(num_float64::Int)
@@ -36,7 +42,7 @@ function run(params::ODEParams, results::ODERunResults)
 
     # Load application data
     #nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = AD(params.app)
-    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = appdata(params.app)
+    nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q, qd, p_contact = appdata(params.app, params.contact_json)
     par = Any[nb, ngc, nh, nc, g, 0, 0, h0, hvar, NTSDA]
 
     # Correction step
@@ -57,22 +63,24 @@ function run(params::ODEParams, results::ODERunResults)
     index3=(3-1)*7+3
     index4=(4-1)*7+3
     index5=(5-1)*7+3
-    indexymf=(6-1)*7+2
-    indexmr=(7-1)*7+2
+    index_x_mf=(6-1)*7+1
+    index_y_mf=(6-1)*7+2
+    index_x_mr=(7-1)*7+1
+    index_y_mr=(7-1)*7+2
     indexlf=(4-1)*7+2
     indexlr=(5-1)*7+2
     indexu=(4-1)*7+2
-    save_func(u, t, integrator) = (u[1] + u[2], t^2,
-                                0,#calculate_F_prepare(p_contact[2][1],u[sec1],u[sec3]),
-                                0,#calculate_F_prepare(p_contact[2][2],u[sec1],u[sec3]),
-                                0,#u[index4]-p_contact[2][1]["pos"],
-                                0,#u[index5]-p_contact[2][2]["pos"],
-                                calculate_contact_geo(p_contact[2][3],u[sec1],u[sec3])[2],
-                                calculate_contact_geo(p_contact[2][4],u[sec1],u[sec3])[2],
-                                u[indexymf]-p_contact[2][3]["guide"](u[indexymf-1]),
-                                u[indexmr]-p_contact[2][4]["guide"](u[indexmr-1]),
-                                u[nb*7+nc+indexymf],
-                                u[nb*7+nc+indexmr],
+    ld_contact=p_contact[2]
+    contact_mg,contact_lg,contact_mf,contact_mr=ld_contact
+    save_func(u, t, integrator) = (
+            u[index_y_mf]-contact_mf["guide"](u[index_x_mf]),#diff_y from center to guide
+            u[index_y_mr]-contact_mr["guide"](u[index_x_mr]),#diff_y from center to guide,#
+            calculate_contact_geo(contact_mf,u[sec1],u[sec3])[1],#fx #q,qd
+            calculate_contact_geo(contact_mf,u[sec1],u[sec3])[2],
+            calculate_contact_geo(contact_mr,u[sec1],u[sec3])[1],#fy #q,qd
+            calculate_contact_geo(contact_mr,u[sec1],u[sec3])[2],
+                                u[nb*7+nc+index_y_mf],
+                                u[nb*7+nc+index_y_mr],
                                 float(size(mathfunction.PhiqEval(t,u[sec1],SJDT,par), 1)),
                                 float(size(mathfunction.PhiqEval(t,u[sec1],SJDT,par), 2)),
                                 float(size(u[sec2], 1)),
@@ -88,7 +96,7 @@ function run(params::ODEParams, results::ODERunResults)
                                 )
 
     # Example: Create a tuple type for saved values with 11 Float64 elements
-    saved_values = SavedValues(Float64, create_saved_values_type(17+7))
+    saved_values = SavedValues(Float64, create_saved_values_type(13+7))
 
     cb1 = SavingCallback(save_func, saved_values)
 
@@ -108,22 +116,6 @@ function run(params::ODEParams, results::ODERunResults)
     push!(results.l_saved_data, merge_df)
 end
 
-function merge_sol_result2(sol,saved_values)
-    df = DataFrame(Time=sol.t)
-
-    # Add solution data to the DataFrame
-    for i in 1:length(sol.u[1])
-        df[!, Symbol("sol_$i")] = getindex.(sol.u, i)
-    end
-
-    # Assuming saved_values.saveval contains the saved data,
-    # Append the saved data directly to the DataFrame without type-specific initialization
-    for i in 1:length(saved_values.saveval[1]) # Assuming the first tuple represents the saved data structure
-        # Directly read and append the saved data to the DataFrame
-        df[!, Symbol("ex_$i")] = [sd[i] for sd in saved_values.saveval]
-    end
-    return df
-end
 
 function merge_sol_result(sol, saved_values)
     df = DataFrame(Time=sol.t)

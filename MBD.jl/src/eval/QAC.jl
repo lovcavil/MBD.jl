@@ -1,20 +1,21 @@
 include("./contact.jl")
 function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
-    println("t=$tn----------------------------------------------------------------")
+    println("t=$tn---------------------------------------------------------------")
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     ld_damper, ld_contact,PUSH = p_contact
     uz = [0; 0; 1]
     uy = [0; 1; 0]
     QAC = zeros(ngc)
     # if tn>=0.1 && tn<=0.5
-    F=PUSH(tn)
-    QACi = vcat(-F,0.,0., zeros(4))
-    QAC = add_constraint!(QAC, QACi, 7 * (11 - 1), 0)
-    # end
-    # QACi = vcat(0.,-300.,0., zeros(4))
-    # QAC = add_constraint!(QAC, QACi, 7 * (1 - 1), 0)
+    F=0.0
+    #println(PUSH)
+    if PUSH!=0
+        F=PUSH(tn)
+        QACi = vcat(-F,0.,0., zeros(4))
+        QAC = add_constraint!(QAC, QACi, 7 * (11 - 1), 0) # to the handle
+    end
+
     for d_damper in ld_damper
-        # Account for gravitational force in negative y direction
         b=d_damper["b"]
         damp=d_damper["damp"]
             # mi = SMDT[1, i]

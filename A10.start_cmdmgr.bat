@@ -1,0 +1,2 @@
+cd "C:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl"
+cmd.exe /K "C:\Users\lovca\anaconda3\Scripts\activate.bat & conda activate pydy__env & python C:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\test\pydy_test\cmdui2.py"

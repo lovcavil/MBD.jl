@@ -3,12 +3,10 @@ using Plots
 using Dierckx
 using LinearAlgebra
 
-function calculate_delta_spline(pos_part, vel_glo, spline, clearance)
-    # println("calculate_delta_spline")
+function calculate_delta_spline(pos_part, spline, clearance)
     x= pos_part[1]
     y= pos_part[2]
     # println("x: ", x, " y: ", y)
-    # println("vx: ", vel_glo[1], " vy: ", vel_glo[2])
     nva = x
     while true
         nvb = nva
@@ -39,12 +37,14 @@ function calculate_delta_spline(pos_part, vel_glo, spline, clearance)
         uyb=0
         dr=0
     end
-    pen_pos_delta_local = -(dr < 0 ? 0 : dr )
+    pen_pos_delta_local = -(dr < 0 ? 0 : dr )# penertration in pen_cood, 1d space,
     r_ub = [uxb, uyb]
-    pen_vel_glo=project_vector_and_return_value(vel_glo, r_ub)
     r_init_vel = 0 
-    return pen_pos_delta_local, pen_vel_glo, r_init_vel, r_ub
+    return pen_pos_delta_local, r_init_vel, r_ub
 end
+
+
+
 
 function calculate_resultant_force(ub, pen_pos_delta_local, pen_vel_glo, init_vel, k, f1, AF,damper)
     #*flag
@@ -186,7 +186,7 @@ function project_vector_and_return_value(p, u)
 end
 
 function calculate_contact_geo(d_contact,q,qd)
-    f1,AF,B5,Eeq,damper,start_v,max_f,start_delta,faaa,coeff_d = d_contact["p"]
+    f1,AF,B5,Eeq,damper,start_v,max_f,start_delta,fric_force_mul,c_max_coeff_d = d_contact["p"]
     spl=d_contact["guide"]
     b=d_contact["b"]
 
@@ -196,26 +196,28 @@ function calculate_contact_geo(d_contact,q,qd)
     vel=[qd[index_x],qd[index_y]]
     init_vel = B5
     clearance = 0.25/1000.0
-    pen_pos_delta_local, pen_vel_glo, r_init_vel, ub = calculate_delta_spline(pos_part, vel, spl, clearance)
-
+    #######################################################################################
+    # calculate_contact_geo
+    #######################################################################################
+    pen_pos_delta_local, r_init_vel, ub = calculate_delta_spline(pos_part, spl, clearance)
+    pen_vel_glo= project_vector_and_return_value(vel, ub)
     Fx , Fy = calculate_resultant_force(ub, pen_pos_delta_local, pen_vel_glo, init_vel, Eeq, f1, AF,damper)
+    #######################################################################################
+    # damper
+    #######################################################################################
     Fdx , Fdy=0.,0.
     if Fx!=0.0
         Fdx , Fdy = calculate_cont_damper_force(ub, vel, damper, start_v,0,pen_pos_delta_local,start_delta)
-        # coeff_d = 0.04
+        
         Fdx1 , Fdy1 = Fdx , Fdy
-        if abs(Fdy) > coeff_d * abs(Fy)
+        if abs(Fdy) > c_max_coeff_d * abs(Fy)
             #println("Fdy:$Fdy Fy:$Fy")
-            Fdy1 = coeff_d * sign(Fdy) * abs(Fy)
-            Fdx1 = coeff_d * sign(Fdx) * abs(Fx)
+            Fdy1 = c_max_coeff_d * sign(Fdy) * abs(Fy)
+            Fdx1 = c_max_coeff_d * sign(Fdx) * abs(Fx)
         end
-        # if abs(Fdy) <1
-        #     Fdy1 = 0.0
-        #     Fdx1 = 0.0
-        # end
         Fdx , Fdy = Fdx1 , Fdy1
     end
-    Ffx , Ffy = faaa*calculate_load_carry_fric_force(ub, vel, damper, start_v, max_f)
+    Ffx , Ffy = fric_force_mul*calculate_load_carry_fric_force(ub, vel, damper, start_v, max_f)
     # Fdx , Fdy=0.,0.
     # Ffx , Ffy=0.,0.
     # println("Fx: ", Fx, " Fy: ", Fy)

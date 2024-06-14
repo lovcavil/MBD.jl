@@ -134,7 +134,7 @@ for (i, p) in enumerate(plots)
     display(p)  # Display the plot in the REPL or a notebook
     
     # Construct a file name for each plot
-    filename = "plot_$(i).png"  # or .svg, .pdf, etc., depending on your preferred format
+    filename = "./plots/plot_$(i).png"  # or .svg, .pdf, etc., depending on your preferred format
     
     # Save the plot to disk
     savefig(p, filename)
