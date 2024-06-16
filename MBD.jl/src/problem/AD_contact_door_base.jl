@@ -55,6 +55,7 @@ end
 
 include("AD_contact_door341.jl")
 include("AD_contact_door350.jl")
+include("AD_contact_door351.jl")
 include("AD_contact_door355.jl")
 include("AD_220.jl")
 include("AD_240.jl")
@@ -63,8 +64,11 @@ function appdata(app,contact_json="contact.json")
     if app >= 340 && app < 349
         return AD340(app)
     end
-    if app >= 350 && app < 355
+    if app >= 350 && app < 351
         return AD350(app,contact_json)
+    end
+    if app >= 351 && app < 355
+        return AD351(app,contact_json)
     end
     if app >= 355 && app < 359
         return AD355(app,contact_json)

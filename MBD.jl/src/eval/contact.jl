@@ -12,12 +12,10 @@ function calculate_F_prepare(d_contact,q,qd)
         delta_v = q[index] - (threshold)
         vel_v = qd[index]
         init_vel_v=-0.1
-        # println("delta_v $delta_v vel_v $vel_v")
-        # fz = calculate_F_flore_Abs(abs(delta_v), abs(vel_v), checkSign(delta_v, vel_v), 1e10, 0.97, 0.6, init_vel_v)
         fz = calculate_F_flore_Abs_modified((delta_v), (vel_v), checkSign(delta_v, vel_v), 1e9, 0.97, 0.6, init_vel_v)
     end
-    # println("fz $fz")
-    return fz>1e20 ? 1e20 : fz
+    debugDict=Dict("fz"=>fz)
+    return fz>1e20 ? 1e20 : fz ,debugDict
 end
 
 function calculate_Fy_prepare(d_contact,q,qd)

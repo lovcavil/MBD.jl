@@ -32,16 +32,12 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
         if type == "guide"
             b = d_contact["b"]
             index = 7 * (b - 1) + 2
-            # fy=calculate_Fy_prepare(d_contact,q,qd)
-            fx, fy = calculate_contact_geo(d_contact, q, qd)
+            fx, fy, debug_dict = calculate_contact_geo(d_contact, q, qd)
             QACi = vcat(fx, fy, 0, zeros(4))
         elseif type == "pos"
-            fz = calculate_F_prepare(d_contact, q, qd)
+            fz,debugDict = calculate_F_prepare(d_contact, q, qd)
             b = d_contact["b"]
             index = 7 * (b - 1) + 3
-            # if b == 4
-            #   println("q[index]$(q[index]) d$delta_v v$vel_v inv$init_vel_v f$fz")
-            # end
             QACi = vcat(0, 0, fz, zeros(4))
         end
 

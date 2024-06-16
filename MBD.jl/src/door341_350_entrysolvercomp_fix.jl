@@ -37,7 +37,7 @@ function main()
         dt = 0.001
         config_cfg=""
         contact_cfg="contact2_nodamper"
-        app=350
+        app=351
         time=2.2
         runname="test_run"
         bf="C:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/"
