@@ -1,14 +1,14 @@
 #####################################################################################
 # used for the clearance problem solver compare
-# 2 ground roller of contact
+# 2 ground roller + mf mr of contact 
 #####################################################################################
 using LinearAlgebra
 using JSON
 using DelimitedFiles
 using Dierckx
 
-function AD351(app,contact_json="contact")
-    if app >= 351 && app < 355
+function AD353(app,contact_json="contact")
+    if app >= 353 && app < 355
         script_dir = @__DIR__
 
         # Build the path to the JSON file
@@ -18,8 +18,8 @@ function AD351(app,contact_json="contact")
         contact_json_data = JSON.parsefile(contact_json_path)
         nb = 3 + 7 +1     # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
-        nh =    2 +        8 +         5      # Number of holonomic constraints
-        nhc =   10 +      8*6 +        5      # Number of holonomic constraint equations
+        nh =    2 +        8 +         3      # Number of holonomic constraints
+        nhc =   10 +      8*6 +        3      # Number of holonomic constraint equations
 
         nc = nhc + nb   # Number of constraint equations
         NTSDA = 0       # Number of TSDA force elements
@@ -109,15 +109,15 @@ function AD351(app,contact_json="contact")
         # nSJDT=nSJDT+1
         # SJDT[:, nSJDT] = Any[1030, 5, 0, zer..., zer..., -22.7978911861/1000.0, zer..., zer..., zer..., zer...]
 
-        fixrootrollerMF = json_data["fixrootrollerMF"]
-        si1pr10 = fixrootrollerMF - rMA
-        nSJDT=nSJDT+1
-        SJDT[:, nSJDT] = Any[1070, 6, 0, zer..., zer..., spl_dic["MF"], ux..., uz..., ux..., uz...]
+        # fixrootrollerMF = json_data["fixrootrollerMF"]
+        # si1pr10 = fixrootrollerMF - rMA
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 6, 0, zer..., zer..., spl_dic["MF"], ux..., uz..., ux..., uz...]
 
-        fixrootrollerMR = json_data["fixrootrollerMR"]
-        si1pr6 = fixrootrollerMR - rMA
-        nSJDT=nSJDT+1
-        SJDT[:, nSJDT] = Any[1070, 7, 0, zer..., zer..., spl_dic["MR"], ux..., uz..., ux..., uz...]
+        # fixrootrollerMR = json_data["fixrootrollerMR"]
+        # si1pr6 = fixrootrollerMR - rMA
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 7, 0, zer..., zer..., spl_dic["MR"], ux..., uz..., ux..., uz...]
 
         fixrootrollerLF = json_data["fixrootrollerLF"]
         si1pr11 = fixrootrollerLF - rLA
@@ -198,13 +198,13 @@ function AD351(app,contact_json="contact")
             "type"=>"guide",
             "b" => 6,
             "guide" => spl_dic["MF"],
-            "p" => p_off,
+            "p" => p_eff,
         )
         contact_mr = Dict(
             "type"=>"guide",
             "b" => 7,
             "guide" => spl_dic["MR"],
-            "p" => p_off,
+            "p" => p_eff,
         )
 
         ld_contact =[contact_mg,contact_lg,contact_mf,contact_mr]

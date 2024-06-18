@@ -124,6 +124,20 @@ function calculate_load_carry_fric_force(ub, vel, damper, start_v, max_f)
 
 end
 
+function calculate_g_fric_force(ub, vel, fz, start_v)
+    flag = 0
+    if ub[2] > 0.0
+        flag = 1
+    elseif ub[2] < 0.0
+        flag = -1
+    else
+    end
+    vel_slide = project_vector_and_return_value(vel, ub)
+    miu=abs(smoothstep(abs(vel_slide), 0.0002, start_v))
+    return miu * sign(vel[2]) * ub * fz *0.3,vel_slide,miu
+end
+
+
 function step_f(v, start_v, max_f)
     if v > start_v
         return max_f

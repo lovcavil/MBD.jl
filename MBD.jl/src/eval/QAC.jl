@@ -6,11 +6,13 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
     uz = [0; 0; 1]
     uy = [0; 1; 0]
     QAC = zeros(ngc)
-    # if tn>=0.1 && tn<=0.5
+
     F=0.0
     #println(PUSH)
     if PUSH!=0
-        F=PUSH(tn)
+        if tn>=0.5 
+            F=PUSH(tn-0.5)
+        end
         QACi = vcat(-F,0.,0., zeros(4))
         QAC = add_constraint!(QAC, QACi, 7 * (11 - 1), 0) # to the handle
     end
@@ -35,10 +37,11 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
             fx, fy, debug_dict = calculate_contact_geo(d_contact, q, qd)
             QACi = vcat(fx, fy, 0, zeros(4))
         elseif type == "pos"
-            fz,debugDict = calculate_F_prepare(d_contact, q, qd)
+            fx, fy, fz,debugDict = calculate_F_plus(d_contact, q, qd)
+
             b = d_contact["b"]
             index = 7 * (b - 1) + 3
-            QACi = vcat(0, 0, fz, zeros(4))
+            QACi = vcat(fx, fy,  fz, zeros(4))
         end
 
         QAC = add_constraint!(QAC, QACi, 7 * (b - 1), 0)

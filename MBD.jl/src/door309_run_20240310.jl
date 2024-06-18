@@ -93,11 +93,29 @@ function run(params::ODEParams, results::ODERunResults)
         calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["Ffy"],
         u[index_z_mg] - contact_mg["pos"],
         u[index_z_lg] - contact_lg["pos"],
-        calculate_F_prepare(contact_mg, u[sec1], u[sec3])[2]["fz"],
-        calculate_F_prepare(contact_lg, u[sec1], u[sec3])[2]["fz"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["fx"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["fy"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["fz"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["fx"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["fy"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["fz"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["vx"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["vy"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["vx"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["vy"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["ub_x"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["ub_y"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["ub_x"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["ub_y"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["vel_slide"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["vel_slide"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["miu"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["miu"],
+        calculate_F_plus(contact_mg, u[sec1], u[sec3])[4]["debug_dir"],
+        calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["debug_dir"],
     )
 
-    saved_values = SavedValues(Float64, create_saved_values_type(20))
+    saved_values = SavedValues(Float64, create_saved_values_type(38))
     cb1 = SavingCallback(save_func, saved_values)
 
     condition(u, t, integrator) = (u[1] < 2.14)
@@ -143,7 +161,20 @@ function merge_sol_result(sol, saved_values) #@note name
     push!(names,"mf_Ffx")
     push!(names,"mf_Ffy")
     push!(names,"mg_diffz","lg_diffz")
-    push!(names,"mg_fz","lg_fz")
+    push!(names,"mg_fx","mg_fy","mg_fz")
+    push!(names,"lg_fx","lg_fy","lg_fz")
+    push!(names,"mg_vx","mg_vy")
+    push!(names,"lg_vx","lg_vy")
+    push!(names,"mg_ub_x")
+    push!(names,"mg_ub_y")
+    push!(names,"lg_ub_x")
+    push!(names,"lg_ub_y")
+    push!(names,"mg_vel_slide")
+    push!(names,"lg_vel_slide")
+    push!(names,"mg_miu")
+    push!(names,"lg_miu")
+    push!(names,"mg_debug_dir")
+    push!(names,"lg_debug_dir")
     # Append the saved data directly to the DataFrame, adjusting for length mismatch
     for i in 1:length(saved_values.saveval[1])  # Assuming the first tuple represents the saved data structure
         col_name=Symbol("ex_$(i)_$(names[i])")
