@@ -2,7 +2,7 @@ include("./contact.jl")
 function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
     println("t=$tn---------------------------------------------------------------")
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
-    ld_damper, ld_contact,PUSH = p_contact
+    ld_damper, ld_contact,PUSH,start_time = p_contact
     uz = [0; 0; 1]
     uy = [0; 1; 0]
     QAC = zeros(ngc)
@@ -10,8 +10,8 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
     F=0.0
     #println(PUSH)
     if PUSH!=0
-        if tn>=0.5 
-            F=PUSH(tn-0.5)
+        if tn>=start_time
+            F=PUSH(tn-start_time)
         end
         QACi = vcat(-F,0.,0., zeros(4))
         QAC = add_constraint!(QAC, QACi, 7 * (11 - 1), 0) # to the handle

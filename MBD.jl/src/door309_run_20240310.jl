@@ -89,6 +89,13 @@ function run(params::ODEParams, results::ODERunResults)
         calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["Fy"],
         calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["Fdx"],
         calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["Fdy"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["vx"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["vy"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["vel_slide"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["pen_pos_delta_local"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["pen_mod"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["vel_mod"],
+        calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["testflag"],
         calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["Ffx"],
         calculate_contact_geo(contact_mf, u[sec1], u[sec3])[3]["Ffy"],
         u[index_z_mg] - contact_mg["pos"],
@@ -115,7 +122,7 @@ function run(params::ODEParams, results::ODERunResults)
         calculate_F_plus(contact_lg, u[sec1], u[sec3])[4]["debug_dir"],
     )
 
-    saved_values = SavedValues(Float64, create_saved_values_type(38))
+    saved_values = SavedValues(Float64, create_saved_values_type(45))
     cb1 = SavingCallback(save_func, saved_values)
 
     condition(u, t, integrator) = (u[1] < 2.14)
@@ -158,6 +165,10 @@ function merge_sol_result(sol, saved_values) #@note name
     push!(names,"mf_Fx","mf_Fy")
     push!(names,"mf_Fdx")
     push!(names,"mf_Fdy")
+    push!(names,"mf_vx","mf_vy")
+    push!(names,"mf_vel_slide")
+    push!(names,"mf_pen_pos_delta_local")
+    push!(names,"mf_pen_mod","mf_vel_mod","mf_testflag")
     push!(names,"mf_Ffx")
     push!(names,"mf_Ffy")
     push!(names,"mg_diffz","lg_diffz")

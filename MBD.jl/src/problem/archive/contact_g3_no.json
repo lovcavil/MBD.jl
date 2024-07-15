@@ -3,13 +3,24 @@
     "f1": 0.97,
     "AF": 0.6,
     "B5": -1.1,
-    "Eeq": 4.5464758335e9,
+    "Eeq": 4.5464758335e5,
     "f_start_v": 0.01,
     "f_max": 200,
-    "faaa": 1,
+    "faaa": 0,
+    "contactdamp_type":"no",
     "c_start_delta": 0.0001,
-    "c_max_coeff_d": 0.05,
+    "c_max_coeff_d": 0.00,
     "c_damper": 0
+  },
+  "p_g": {
+    "f1": 0.97,
+    "AF": 0.6,
+    "B5": -0.1,
+    "Eeq": 4.5464758335e6,
+    "n_damper":0.0010,
+    "f_type":"no",
+    "fric_force_mul":-1,
+    "f_start_v": 0.0005
   },
   "p_off": {
     "f1": 0.97,
@@ -18,9 +29,10 @@
     "Eeq": 0.0,
     "f_start_v": 0.01,
     "f_max": 200,
-    "faaa": 1,
+    "faaa": 0,
+    "contactdamp_type":"no",
     "c_start_delta": 0.0001,
-    "c_max_coeff_d": 0.05,
+    "c_max_coeff_d": 0.00,
     "c_damper": 0
   },
   "initialGeneralizedCoordinates": {

@@ -87,7 +87,7 @@ function calculate_resultant_force0(ub, pen_pos_delta_local, pen_vel_glo, init_v
     return [-r * ub[1] + fd[1], -r * ub[2] + fd[2]]
 end
 
-function calculate_cont_damper_force(ub, vel, damper, start_v, max_f, pen_pos_delta_local, start_delta)
+function calculate_cont_damper_force(ub, vel, damper,  pen_pos_delta_local, start_delta)
     flag = 0
     if ub[2] > 0.0
         flag = 1
@@ -96,8 +96,6 @@ function calculate_cont_damper_force(ub, vel, damper, start_v, max_f, pen_pos_de
     else
     end
     vel_slide = project_vector_and_return_value(vel, ub)
-    # println("ub:$ub")
-    # println("cont_damp:$(smoothstep(abs(pen_pos_delta_local),0,start_delta)*vel_slide*damper*sign(vel[2])*ub*flag)")
     return smoothstep(abs(pen_pos_delta_local), 0, start_delta) * vel_slide * damper * sign(vel[2]) * ub * flag * smoothstep(vel_slide, 0.05, 0.1)
 end
 
@@ -124,18 +122,7 @@ function calculate_load_carry_fric_force(ub, vel, damper, start_v, max_f)
 
 end
 
-function calculate_g_fric_force(ub, vel, fz, start_v)
-    flag = 0
-    if ub[2] > 0.0
-        flag = 1
-    elseif ub[2] < 0.0
-        flag = -1
-    else
-    end
-    vel_slide = project_vector_and_return_value(vel, ub)
-    miu=abs(smoothstep(abs(vel_slide), 0.0002, start_v))
-    return miu * sign(vel[2]) * ub * fz *0.3,vel_slide,miu
-end
+
 
 
 function step_f(v, start_v, max_f)
@@ -204,9 +191,21 @@ function project_vector_and_return_value(p, u)
 end
 
 function calculate_contact_geo(d_contact, q, qd)#@note main calc contact
-    f1, AF, B5, Eeq, damper, start_v, max_f, start_delta, fric_force_mul, c_max_coeff_d = d_contact["p"]
     spl = d_contact["guide"]
     b = d_contact["b"]
+
+    f1=d_contact["p"]["f1"]
+    AF=d_contact["p"]["AF"]
+    B5=d_contact["p"]["B5"]
+    Eeq=d_contact["p"]["Eeq"]
+    start_v=d_contact["p"]["f_start_v"]
+    max_f=d_contact["p"]["f_max"]
+    fric_force_mul=d_contact["p"]["faaa"]
+    start_delta=d_contact["p"]["c_start_delta"]
+    c_max_coeff_d=d_contact["p"]["c_max_coeff_d"]
+    damper=d_contact["p"]["n_damper"]*Eeq
+    contactdamp_type=d_contact["p"]["contactdamp_type"]
+
     index_x = 7 * (b - 1) + 1
     index_y = 7 * (b - 1) + 2
     pos_part = [q[index_x], q[index_y]]
@@ -223,22 +222,54 @@ function calculate_contact_geo(d_contact, q, qd)#@note main calc contact
     # damper
     #######################################################################################
     Fdx, Fdy = 0.0, 0.0
-    if Fx != 0.0
-        Fdx, Fdy = calculate_cont_damper_force(ub, vel, damper, start_v, 0, pen_pos_delta_local, start_delta)
-
-        Fdx1, Fdy1 = Fdx, Fdy
-        if abs(Fdy) > c_max_coeff_d * abs(Fy)
-            Fdy1 = c_max_coeff_d * sign(Fdy) * abs(Fy)
-            Fdx1 = c_max_coeff_d * sign(Fdx) * abs(Fx)
+    vel_slide=0
+    pen_mod=0
+    vel_mod=0
+    testflag=0
+    if Fy != 0.0
+        if contactdamp_type=="no"
+            Fdx, Fdy = 0.0, 0.0
         end
-        Fdx, Fdy = Fdx1, Fdy1
+        if contactdamp_type=="basic"
+            v1=d_contact["p"]["d_sec"]["1"]
+            v2=d_contact["p"]["d_sec"]["2"]
+            v3=d_contact["p"]["d_sec"]["3"]
+            v4=d_contact["p"]["d_sec"]["4"]
+            flag = 0
+            if ub[2] > 0.0
+                flag = 1
+            elseif ub[2] < 0.0
+                flag = -1
+            else
+            end
+            vel_slide = project_vector_and_return_value(vel, ub)
+            pen_mod=smoothstep(abs(pen_pos_delta_local), v1, v2)
+            vel_mod=smoothstep(vel_slide, v3, v4)
+            testflag=sign(vel[2]) * ub[2] * flag
+            Fdx, Fdy =  pen_mod * abs(vel_slide) * damper * sign(vel[2]) * ub * flag * vel_mod
+            #Fdx, Fdy =   abs(vel_slide) * damper * sign(vel[2]) * ub * flag 
+            Fdx1, Fdy1 = Fdx, Fdy
+            if c_max_coeff_d!=9999 
+                if abs(Fdy) > c_max_coeff_d * abs(Fy)
+                    Fdy1 = c_max_coeff_d * sign(Fdy) * abs(Fy)
+                    Fdx1 = c_max_coeff_d * sign(Fdx) * abs(Fx)
+                end
+            end
+            Fdx, Fdy = Fdx1, Fdy1
+        end
+        
     end
     Ffx, Ffy = fric_force_mul * calculate_load_carry_fric_force(ub, vel, damper, start_v, max_f)
 
     debug_dict=Dict("ub_x"=>ub[1], "ub_y"=>ub[2],
+                    "vx"=>vel[1], "vy"=>vel[2],
                     "Fx"=>Fx, "Fy"=>Fy,
                     "Fdx"=>Fdx, "Fdy"=>Fdy,
-                    "Ffx"=>Ffx, "Ffy"=>Ffy)
+                    "Ffx"=>Ffx, "Ffy"=>Ffy,
+                    "vel_slide"=>vel_slide,"pen_pos_delta_local"=>pen_pos_delta_local,
+                    "pen_mod"=>pen_mod,"vel_mod"=>vel_mod,
+                    "testflag"=>testflag
+                    )
 
     return Fx - Fdx - Ffx, Fy - Fdy - Ffy, debug_dict
 end

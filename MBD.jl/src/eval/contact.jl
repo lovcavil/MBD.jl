@@ -8,7 +8,7 @@ function calculate_F_plus(d_contact,q,qd)
     n = d_contact["p"]["n_damper"]
     B5 = d_contact["p"]["B5"]
     fric_force_mul = d_contact["p"]["fric_force_mul"]
-    start_v=d_contact["p"]["f_start_v"]
+    
     index_x = 7 * (b - 1) + 1
     index_y = 7 * (b - 1) + 2
     index = 7 * (b - 1) + 3
@@ -37,12 +37,49 @@ function calculate_F_plus(d_contact,q,qd)
     fric=0.0
     vel_slide=0.0
     miu=0.0
+    if d_contact["p"]["f_type"]=="Coulomb"
+        v1=d_contact["p"]["f_v_sec"]["1"]
+        v2=d_contact["p"]["f_v_sec"]["2"]
+        v3=d_contact["p"]["f_v_sec"]["3"]
+        v4=d_contact["p"]["f_v_sec"]["4"]
+
+        flag = 0
+        if ub[2] > 0.0
+            flag = 1
+        elseif ub[2] < 0.0
+            flag = -1
+        else
+        end
+        vel_slide = project_vector_and_return_value(vel, ub)
+        miu=abs(smoothstep(abs(vel_slide), v1, v2))-0.1*abs(smoothstep(abs(vel_slide), v3, v4))
+        fric=miu * sign(vel[2]) * ub * fz *0.3
+        fx, fy = fric_force_mul * fric
+    end
     if d_contact["p"]["f_type"]=="fix"
-        fric,vel_slide,miu=calculate_g_fric_force(ub, vel, fz, start_v)
+        start_v=d_contact["p"]["f_start_v"]
+        flag = 0
+        if ub[2] > 0.0
+            flag = 1
+        elseif ub[2] < 0.0
+            flag = -1
+        else
+        end
+        vel_slide = project_vector_and_return_value(vel, ub)
+        miu=abs(smoothstep(abs(vel_slide), 0.0002, start_v))
+        fric=miu * sign(vel[2]) * ub * fz *0.3
         fx, fy = fric_force_mul * fric
     end
     if d_contact["p"]["f_type"]=="no"
-        fric,vel_slide,miu=calculate_g_fric_force(ub, vel, fz, start_v)
+        start_v=d_contact["p"]["f_start_v"]
+        flag = 0
+        if ub[2] > 0.0
+            flag = 1
+        elseif ub[2] < 0.0
+            flag = -1
+        else
+        end
+        vel_slide = project_vector_and_return_value(vel, ub)
+        miu=abs(smoothstep(abs(vel_slide), 0.0002, start_v))
     end
     debug_dir=0.0
     test=fy*vel[2]

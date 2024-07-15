@@ -177,8 +177,8 @@ function AD352(app,contact_json="contact")
         end
         PUSH=fit_xycurve_PUSH("PUSH298.csv", 5)
 
-        p_eff=formContact(contact_json_data,"p_eff")
-        p_off=formContact(contact_json_data,"p_off")
+        p_eff=contact_json_data["p_eff"]
+        p_off=contact_json_data["p_off"]
         p_g=contact_json_data["p_g"]
         contact_mg = Dict(
             "type"=>"pos",
@@ -229,25 +229,10 @@ function AD352(app,contact_json="contact")
             "damp" => [0,0000,0]
         )
         ld_damper = [damper_door,  damper_lg,damper_mf,damper_mr]#damper_g
-        p_contact = Any[ld_damper, ld_contact,PUSH]
+        p_contact = Any[ld_damper, ld_contact,PUSH,1.0]
 
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0, p_contact
 
     end
 end
 
-function formContact(contact_json_data,p)
-    f1=contact_json_data[p]["f1"]
-    AF=contact_json_data[p]["AF"]
-    B5=contact_json_data[p]["B5"]
-    Eeq=contact_json_data[p]["Eeq"]
-    f_start_v=contact_json_data[p]["f_start_v"]
-    f_max=contact_json_data[p]["f_max"]
-    fric_force_mul=contact_json_data[p]["faaa"]
-    c_start_delta=contact_json_data[p]["c_start_delta"]
-    c_max_coeff_d=contact_json_data[p]["c_max_coeff_d"]
-    c_damper=contact_json_data[p]["c_damper"]
-
-    res=[f1,AF,B5,Eeq,c_damper,f_start_v,f_max,c_start_delta,fric_force_mul,c_max_coeff_d]
-    return res
-end

@@ -14,3 +14,4 @@ set ma=%2
 set mi=%3
 set sn=%4
 julia.exe --project=C:\Users\lovca\.julia\environments\diffeqpy %filename% %arg2% %arg3% %arg4% %arg5% %time% %runname% %bf% %rt% %at% %ma% %mi% %sn%
+exit

@@ -20,7 +20,7 @@ def run_bat_file(command):
     # Read the output line by line
     for output in process.stdout:
         if output.strip():
-            logger.info(output.strip())
+            #logger.info(output.strip())
             print(output.strip())
 
     # Capture any remaining output
@@ -28,7 +28,7 @@ def run_bat_file(command):
 
     logger.info("Remaining STDOUT:")
     if stdout:
-        logger.info(stdout)
+        #logger.info(stdout)
         print(stdout)
     
     if stderr:

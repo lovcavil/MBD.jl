@@ -1,9 +1,7 @@
 #####################################################################################
 # used for the clearance problem solver compare
+# 2 ground roller + 5 of contact 
 #####################################################################################
-
-
-
 using LinearAlgebra
 using JSON
 using DelimitedFiles
@@ -20,8 +18,8 @@ function AD355(app,contact_json="contact")
         contact_json_data = JSON.parsefile(contact_json_path)
         nb = 3 + 7 +1     # Number of bodies
         ngc = 7 * nb    # Number of generalized coordinates
-        nh =    2 +        8 +         5      # Number of holonomic constraints
-        nhc =   10 +      8*6 +        5      # Number of holonomic constraint equations
+        nh =    2 +        8 +         0      # Number of holonomic constraints
+        nhc =   10 +      8*6 +        0      # Number of holonomic constraint equations
 
         nc = nhc + nb   # Number of constraint equations
         NTSDA = 0       # Number of TSDA force elements
@@ -56,12 +54,17 @@ function AD355(app,contact_json="contact")
         SJDT = Array{Any}(undef, 22, nh)
         si1pr1 = (revrootMA - rDoor)
         sj2pr1 = (revrootMA - rMA)
+#####################################################################################
+# rotation 2
+#####################################################################################
         SJDT[:, 1] = Any[4, 1, 2, si1pr1..., sj2pr1..., 0, ux..., uz..., ux..., uz...]
 
         si1pr2 = (revrootLA - rDoor)
         sj2pr2 = (revrootLA - rLA)
         SJDT[:, 2] = Any[4, 1, 3, si1pr2..., sj2pr2..., 0, ux..., uz..., ux..., uz...]
-
+#####################################################################################
+# fix 7
+#####################################################################################
         revrootrollerMG = json_data["fixrootrollerMG"]
         si1pr3 = (revrootrollerMG - rMA)
         sj2pr3 = (revrootrollerMG - rMG)
@@ -96,35 +99,49 @@ function AD355(app,contact_json="contact")
         si1pr9 = (revrootrollerU - rDoor)
         sj2pr9 = (revrootrollerU - rU)
         SJDT[:, 9] = Any[20, 1, 10, si1pr9..., sj2pr9..., 0, ux..., uz..., ux..., uz...]
+#####################################################################################
+# rollers
+#####################################################################################
+
+        nSJDT=9
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1030, 4, 0, zer..., zer..., 999.4630310344/1000.0, zer..., zer..., zer..., zer...]
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1030, 5, 0, zer..., zer..., -22.7978911861/1000.0, zer..., zer..., zer..., zer...]
 
         # fixrootrollerMF = json_data["fixrootrollerMF"]
         # si1pr10 = fixrootrollerMF - rMA
-        # SJDT[:, 15] = Any[1070, 6, 0, zer..., zer..., spl_dic["MF"], ux..., uz..., ux..., uz...]
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 6, 0, zer..., zer..., spl_dic["MF"], ux..., uz..., ux..., uz...]
 
         # fixrootrollerMR = json_data["fixrootrollerMR"]
         # si1pr6 = fixrootrollerMR - rMA
-        # SJDT[:, 16] = Any[1070, 7, 0, zer..., zer..., spl_dic["MR"], ux..., uz..., ux..., uz...]
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 7, 0, zer..., zer..., spl_dic["MR"], ux..., uz..., ux..., uz...]
 
-        fixrootrollerLF = json_data["fixrootrollerLF"]
-        si1pr11 = fixrootrollerLF - rLA
-        SJDT[:, 12] = Any[1070, 8, 0, zer..., zer..., spl_dic["LF"], ux..., uz..., ux..., uz...]
+        # fixrootrollerLF = json_data["fixrootrollerLF"]
+        # si1pr11 = fixrootrollerLF - rLA
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 8, 0, zer..., zer..., spl_dic["LF"], ux..., uz..., ux..., uz...]
 
-        fixrootrollerLR = json_data["fixrootrollerLR"]
-        si1pr8 = fixrootrollerLR - rLA
-        SJDT[:, 13] = Any[1070, 9, 0, zer..., zer..., spl_dic["LR"], ux..., uz..., ux..., uz...]
+        # fixrootrollerLR = json_data["fixrootrollerLR"]
+        # si1pr8 = fixrootrollerLR - rLA
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 9, 0, zer..., zer..., spl_dic["LR"], ux..., uz..., ux..., uz...]
 
-        fixrootrollerU = json_data["fixrootrollerU"]
-        si1pr12 = fixrootrollerU - rDoor
-        SJDT[:, 14] = Any[1070, 10, 0, zer..., zer..., spl_dic["U"], ux..., uz..., ux..., uz...]
-
-        SJDT[:, 10] = Any[1030, 4, 0, zer..., zer..., 999.4630310344/1000.0, zer..., zer..., zer..., zer...]
-    
-        SJDT[:, 11] = Any[1030, 5, 0, zer..., zer..., -22.7978911861/1000.0, zer..., zer..., zer..., zer...]
-
+        # fixrootrollerU = json_data["fixrootrollerU"]
+        # si1pr12 = fixrootrollerU - rDoor
+        # nSJDT=nSJDT+1
+        # SJDT[:, nSJDT] = Any[1070, 10, 0, zer..., zer..., spl_dic["U"], ux..., uz..., ux..., uz...]
+        
+#####################################################################################
+# fix 1 handle
+#####################################################################################        
         # fixrootHandle = fixrootHandle
         si1pr9 = (fixrootHandle - rDoor)
         sj2pr9 = (fixrootHandle - fixrootHandle)
-        SJDT[:, 15] = Any[20, 1, 11, si1pr9..., sj2pr9..., 0, ux..., uz..., ux..., uz...]
+        nSJDT=nSJDT+1
+        SJDT[:, nSJDT] = Any[20, 1, 11, si1pr9..., sj2pr9..., 0, ux..., uz..., ux..., uz...]
 
 
         # # SMDT(4, nb): Mass Data Table (With diagonal inertia matrix)
@@ -160,18 +177,22 @@ function AD355(app,contact_json="contact")
         end
         PUSH=fit_xycurve_PUSH("PUSH298.csv", 5)
 
-        p_eff=formContact(contact_json_data,"p_eff")
-        p_off=formContact(contact_json_data,"p_off")
-
+        p_eff=contact_json_data["p_eff"]
+        p_off=contact_json_data["p_off"]
+        p_g=contact_json_data["p_g"]
         contact_mg = Dict(
             "type"=>"pos",
             "b" => 4,
-            "pos" => -999.4630310344,
+            "pos" => 999.4630310344/1000.0,
+            "guide" => spl_dic["MF"],
+            "p" => p_g,
         )
         contact_lg = Dict(
             "type"=>"pos",
             "b" => 5,
-            "pos" => -1122.7978911861,
+            "pos" => -22.7978911861/1000.0,
+            "guide" => spl_dic["LF"],
+            "p" => p_g,
         )
         contact_mf = Dict(
             "type"=>"guide",
@@ -185,8 +206,26 @@ function AD355(app,contact_json="contact")
             "guide" => spl_dic["MR"],
             "p" => p_eff,
         )
+        contact_lf = Dict(
+            "type"=>"guide",
+            "b" => 8,
+            "guide" => spl_dic["LF"],
+            "p" => p_eff,
+        )
+        contact_lr = Dict(
+            "type"=>"guide",
+            "b" => 9,
+            "guide" => spl_dic["LR"],
+            "p" => p_eff,
+        )
+        contact_u = Dict(
+            "type"=>"guide",
+            "b" => 10,
+            "guide" => spl_dic["U"],
+            "p" => p_eff,
+        )
 
-        ld_contact =[contact_mg,contact_lg,contact_mf,contact_mr]
+        ld_contact =[contact_mg,contact_lg,contact_mf,contact_mr,contact_lf,contact_lr,contact_u]
         damper_mg = Dict(
             "b" => 4,
             "damp" => [0,0,0],
@@ -197,38 +236,20 @@ function AD355(app,contact_json="contact")
         )
         damper_mf = Dict(
             "b" => 6,
-            "damp" => [0,0000,0]#[0,2000,0],
+            "damp" => [0,0000,0]
         )
         damper_mr = Dict(
             "b" => 7,
-            "damp" => [0,0000,0]#[0,2000,0],
+            "damp" => [0,0000,0]
         )
         damper_door = Dict(
             "b" => 1,
-            "damp" => [0,0000,0]#[0,2000,0],
+            "damp" => [0,0000,0]
         )
         ld_damper = [damper_door,  damper_lg,damper_mf,damper_mr]#damper_g
-        p_contact = Any[ld_damper, ld_contact,PUSH]
-
-        #println(qd0)
+        p_contact = Any[ld_damper, ld_contact,PUSH,1.0]
 
         return nb, ngc, nh, nc, NTSDA, SJDT, SMDT, STSDAT, q0, qd0, p_contact
 
     end
-end
-
-function formContact(contact_json_data,p)
-    f1=contact_json_data[p]["f1"]
-    AF=contact_json_data[p]["AF"]
-    B5=contact_json_data[p]["B5"]
-    Eeq=contact_json_data[p]["Eeq"]
-    f_start_v=contact_json_data[p]["f_start_v"]
-    f_max=contact_json_data[p]["f_max"]
-    faaa=contact_json_data[p]["faaa"]
-    c_start_delta=contact_json_data[p]["c_start_delta"]
-    c_max_coeff_d=contact_json_data[p]["c_max_coeff_d"]
-    c_damper=contact_json_data[p]["c_damper"]
-
-    res=[f1,AF,B5,Eeq,c_damper,f_start_v,f_max,c_start_delta,faaa,c_max_coeff_d]
-    return res
 end
