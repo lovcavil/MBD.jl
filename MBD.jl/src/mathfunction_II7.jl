@@ -1132,10 +1132,11 @@ function ODEfunct(tn, q, qd, SMDT, STSDAT, SJDT, par)
     Phiq = PhiqEval(tn, q, SJDT, par)
     E = vcat(hcat(M,Phiq'), hcat(Phiq,zeros(nc, nc)))
     ECond = cond(E)
-    println("cond",ECond)
-    println("r",rank(E))
-    # x = E \ RHS
-    x = pinv(E) * RHS
+    # ECond=0
+    #println("cond",ECond)
+    #println("r",rank(E))
+    x = E \ RHS
+    #x = pinv(E) * RHS
 
     qdd = zeros(ngc)
     for i in 1:ngc

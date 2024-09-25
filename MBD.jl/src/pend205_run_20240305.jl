@@ -1,5 +1,5 @@
 # Import necessary packages
-include("./problem/AD_contact.jl")
+include("./problem/AD_contact_pend.jl")
 include("./solver/solver.jl")
 
 using LinearAlgebra, DifferentialEquations, OrdinaryDiffEq, Sundials, Plots, CSV, DataFrames

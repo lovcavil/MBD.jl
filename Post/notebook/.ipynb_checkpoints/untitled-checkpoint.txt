@@ -1,0 +1,24 @@
+Strain@B1_1.RN_6,Strain@B2_1.RN_6,Strain@B2_2.RN_6,Strain@B2_3.RN_6,Strain@B2_4.RN_6,Strain@B3_1.RN_6,Strain@B3_2.RN_6,Strain@B3_3.RN_6,Strain@B3_4.RN_6,acc@A1_X.RN_6,acc@A1_Y.RN_6,acc@A1_Z.RN_6,acc@A2_X.RN_6,acc@A2_Y.RN_6,acc@A2_Z.RN_6,acc@A3_X.RN_6,acc@A3_Y.RN_6,acc@A3_Z.RN_6,acc@A4_X.RN_6,acc@A4_Y.RN_6,acc@A4_Z.RN_6,acc@A5_X.RN_6,acc@A5_Y.RN_6,acc@A5_Z.RN_6,acc@A6_X.RN_6,acc@A6_Y.RN_6,acc@A6_Z.RN_6,acc@A7_X.RN_6,acc@A7_Y.RN_6,acc@A7_Z.RN_6,can@press.RN_6
+
+
+{
+    "selected_columns1": [
+        "Strain@B3_2.RN_6"
+    ],
+    "start_time1": 98.4,
+    "end_time1": 100,
+    "selected_columns2": [
+        "213.asc"
+    ],
+    "start_time2": 0,
+    "end_time2": 2,
+    "data_amount": 2,
+    "smoothing_method": "Fourier Filter",
+    "window_sizes1": [
+        60
+    ],
+    "window_sizes2": [
+        60
+    ],
+    "csv_path2": "C:\\OneDrive\\Articles\\10.Working\\[D21][20211009]ContactMechanics\\MBD.jl\\plots\\adams2\\6\\GFO_MF U3_export.csv"
+

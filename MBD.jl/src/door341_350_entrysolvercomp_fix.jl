@@ -39,8 +39,10 @@ function main()
         contact_cfg="contact_g65"
         app=355
         time=3.5
+        time=0.1
         runname="test_355"
         bf="C:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/"
+        bf="D:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/"
         reltol = 1e-3
         abstol = 1e-3
         dtmin = 1e-7

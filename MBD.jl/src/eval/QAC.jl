@@ -1,6 +1,6 @@
 include("./contact.jl")
 function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
-    println("t=$tn---------------------------------------------------------------")
+    #println("t=$tn-QACEval--------------------------------------------------------")
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = parPart(par)
     ld_damper, ld_contact,PUSH,start_time = p_contact
     uz = [0; 0; 1]

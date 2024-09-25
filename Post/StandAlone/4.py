@@ -100,7 +100,7 @@ class CSVPlotter:
         self.csv_files = []
         self.current_folder = None
 
-        self.output_folder = './plots'
+        self.output_folder = 'D:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/plots'
         os.makedirs(self.output_folder, exist_ok=True)
 
         # Tab 2: Settings
