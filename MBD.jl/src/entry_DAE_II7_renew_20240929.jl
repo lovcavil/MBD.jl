@@ -12,11 +12,10 @@ using ProfileView
 #import Pkg; Pkg.add("ProfileView")
 
 using PProf
-function run(app)
-    #println("app", app)
+function run(app,intol,Atol)
     # Integration and Error Control Parameters
-    intol = 10^-6     # Tolerance in solving discretized equations of motion
-    Atol = 10^-5      # Absolute error tolerance for variable step methods
+    # intol = 10^-6     # Tolerance in solving discretized equations of motion
+    # Atol = 10^-5      # Absolute error tolerance for variable step methods
     MaxIntiter = 8    # Limit on number of integration iterations
     MaxJcond = 200    # Limit on magnitude of Jcond
     R1nmax = 15.0       # Limit on residual in integration
@@ -194,7 +193,7 @@ function run(app)
     # Measure the execution time of the provided function__________________________________________________________________________
     bf="D:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/"
     runname="CAKD_solver45"
-    output_csv = "execution_times.csv"
+    output_csv = "timing_log_A18.csv"
     output_csv = joinpath(bf, "csv", output_csv)
     start_time = now()
     start_ns = time_ns()  # Get the current time in nanoseconds
@@ -374,7 +373,8 @@ function run(app)
     # Prepare a DataFrame to store the timing information
     timing_df = DataFrame(RunName=[runname],
                           Timestamp=[Dates.format(start_time, "yyyy-mm-dd HH:MM:SS")],
-                          ExecutionTime=[elapsed_time])
+                          ExecutionTime=[elapsed_time],intol=intol
+                          )
 
     # Check if the output CSV file already exists
     if isfile(output_csv)
@@ -386,7 +386,7 @@ function run(app)
         # Write a new CSV file
         CSV.write(output_csv, timing_df)
     end
-    # save time_____________________________________________________________________________________
+    # end save time__________________________________________________________________________________
 
     Plots.default(show = true)
 
@@ -411,9 +411,19 @@ function run(app)
     end
 
 end
-run(240)
-run(240)
-run(240)
+
+
+
+for numdig in 2:12
+    intol = 10.0^-numdig       # Tolerance in solving discretized equations of motion
+    Atol = 10.0^-numdig        # Absolute error tolerance for variable step methods
+
+    for j in 1:10
+        run(240, intol, Atol)
+    end
+end
+
+
 # @profile run(240)
 #@profview run(240)
 
