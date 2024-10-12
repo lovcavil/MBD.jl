@@ -49,12 +49,15 @@ function main()
         dtmax = 1e-2
         sol_name="Tsit5"
     end
+    sol_Dict=Dict()
     if sol_name=="Euler"
         sol_Dict=getEulerDict(dt)
     end
     if sol_name=="Tsit5"
         sol_Dict=getTsit5Dict(reltol,abstol,dtmin,dtmax)
     end
+    println(sol_Dict)
+    println(sol_name)
     par_Dict = Dict(:sol_name=>sol_name,:config_cfg=>config_cfg,:contact_cfg=>contact_cfg,:app=>app
     ,:time=>time,:runname=>runname,:bf=>bf,
     :reltol=>reltol,:abstol=>abstol,:dtmin=>dtmin,:dtmax=>dtmax)

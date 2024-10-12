@@ -1,3 +1,6 @@
+REM Set environment variables
+REM  tb14  --project=C:\Users\lovca\.julia\environments\diffeqpy
+
 
 set filename=%1
 set arg2=%2
@@ -13,5 +16,7 @@ set at=%1
 set ma=%2
 set mi=%3
 set sn=%4
-julia.exe --project=C:\Users\lovca\.julia\environments\diffeqpy %filename% %arg2% %arg3% %arg4% %arg5% %time% %runname% %bf% %rt% %at% %ma% %mi% %sn%
+
+
+julia.exe %JULIAENV% %filename% %arg2% %arg3% %arg4% %arg5% %time% %runname% %bf% %rt% %at% %ma% %mi% %sn%
 exit

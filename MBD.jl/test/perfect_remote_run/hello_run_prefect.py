@@ -2,6 +2,7 @@ import argparse
 from prefect import task, flow, get_run_logger
 import subprocess
 from datetime import datetime
+import os
 
 @task
 def run_bat_file(command):
@@ -20,7 +21,7 @@ def run_bat_file(command):
     # Read the output line by line
     for output in process.stdout:
         if output.strip():
-            logger.info(output.strip())
+            #logger.info(output.strip())
             print(output.strip())
 
     # Capture any remaining output
@@ -28,7 +29,7 @@ def run_bat_file(command):
 
     logger.info("Remaining STDOUT:")
     if stdout:
-        logger.info(stdout)
+        #logger.info(stdout)
         print(stdout)
     
     if stderr:
@@ -61,6 +62,8 @@ def CAKD_SIM(dt: str, cfg1: str, cfg2: str, app: str, t: str,name: str,basefolde
     return result
 
 if __name__ == "__main__":
+    onedrivefolder = os.getenv('OneDrive', 'F:/OneDrive')
+
     parser = argparse.ArgumentParser(description="Run CAKD Simulation")
     parser.add_argument('--name', type=str, default="hello_run_prefect", help="Name Run")
     parser.add_argument('--dt', type=str, default="1e-2", help="Time step value (default: 1e-2)")
@@ -69,13 +72,13 @@ if __name__ == "__main__":
     parser.add_argument('--app', type=str, default="341", help="Application identifier (default: 341)")
     parser.add_argument('--t', type=str, default="0.5", help="Time step value (default: 1.0)")
     parser.add_argument('--bf', type=str,
-                        default="F:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/",
+                        default=f"{onedrivefolder}/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/",
                         help="")
     parser.add_argument('--rt', type=str, default="1e-4", help="")
     parser.add_argument('--at', type=str, default="1e-4", help="")
-    parser.add_argument('--ma', type=str, default="1e-4", help="Time step value (default: 1e-2)")
-    parser.add_argument('--mi', type=str, default="1e-2", help="Time step value (default: 1e-2)")
-    parser.add_argument('--sn', type=str, default="Eular", help="")
+    parser.add_argument('--ma', type=str, default="1e-2", help="Time step value (default: 1e-2)")
+    parser.add_argument('--mi', type=str, default="1e-4", help="Time step value (default: 1e-2)")
+    parser.add_argument('--sn', type=str, default="Euler", help="")
     args = parser.parse_args()
     ct= datetime.now().strftime("%Y/%m/%d-%H:%M:%S")
     CAKD_SIM(dt=args.dt, cfg1=args.cfg1, cfg2=args.cfg2, app=args.app,t=args.t,name=args.name,

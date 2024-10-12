@@ -1,7 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-
+from matplotlib import interactive
+interactive(True)
 # Read the CSV data
 df = pd.read_csv('D:/OneDrive/Articles/10.Working/A18.20240920.PerfectJoint/timing/a.csv')
 
@@ -38,6 +39,7 @@ plt.legend(fontsize=18)
 
 # Show grid and save plot
 plt.grid()
+plt.show()
 output_folder = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\Post\A18"
 output_path = os.path.join(output_folder, 'implcomp.png')
-plt.savefig(output_path, dpi=300, bbox_inches='tight')
+#plt.savefig(output_path, dpi=300, bbox_inches='tight')
