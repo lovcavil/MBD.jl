@@ -27,7 +27,7 @@ plt.scatter(df['x'], df['data_julia'], color='#ff7f0e', alpha=0.7, label='Julia 
 
 # Adding titles and labels
 plt.xlabel('Exponent of tolerance', fontdict=textstyle)
-plt.ylabel('CPU runtime', fontdict=textstyle)
+plt.ylabel('CPU runtime (s)', fontdict=textstyle)
 
 # Modify xticks to add "-" before each value
 modified_xticks = ['-' + str(x) for x in mean_data['x']]
@@ -42,4 +42,4 @@ plt.grid()
 plt.show()
 output_folder = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\Post\A18"
 output_path = os.path.join(output_folder, 'implcomp.png')
-#plt.savefig(output_path, dpi=300, bbox_inches='tight')
+plt.savefig(output_path, dpi=300, bbox_inches='tight')

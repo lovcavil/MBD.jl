@@ -1,6 +1,7 @@
+# using CAKD solver
 include("mathfunction_II7.jl")
-include("./door240_renew_run_20240310.jl")
-include("ExplicitRKFN45.jl")
+include("./door240_renew_run.jl")
+include("./CAKD_solver/ExplicitRKFN45.jl")
 using LinearAlgebra
 using Plots
 using CSV, DataFrames
@@ -396,7 +397,7 @@ function run(app,intol,Atol)
         f1 = plot(t, z2, label="z2", title="Output Data Plot", xlabel="t", ylabel="z", legend=:topright)
         display(f1)
 
-        folder_path = "demo6"
+        folder_path = "csv/demo6"
         if !isdir(folder_path)
             mkdir(folder_path)
         end

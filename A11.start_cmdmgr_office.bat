@@ -1,0 +1,2 @@
+cd "D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl"
+cmd.exe /K "C:\ProgramData\Anaconda3\Scripts\activate.bat & conda activate A11 & python D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\misc\prefect_remote_run\cmd_manager_ui.py"

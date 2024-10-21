@@ -1,11 +1,11 @@
 # using diffeq.jl with correct
 
-include("./door240_renew_run_202403102.jl")
+include("./door240_renew_run.jl")
 using DifferentialEquations
 # Main entry point to control execution
 using Alert
 # Main entry function to control execution and comparison of different runs
-
+using OrdinaryDiffEq
 # problem 
 function test(sol_Dict,par_Dict)
     #sol_name,config_cfg,contact_cfg,app
@@ -59,6 +59,7 @@ function main()
     par_Dict = Dict(:sol_name=>sol_name,:config_cfg=>config_cfg,:contact_cfg=>contact_cfg,:app=>app
     ,:time=>time,:runname=>runname,:bf=>bf,
     :reltol=>reltol,:abstol=>abstol,:dtmin=>dtmin,:dtmax=>dtmax)
+    println(par_Dict)
     test(sol_Dict,par_Dict)
 
 end
@@ -71,8 +72,8 @@ end
 
 function getTsit5Dict(reltol,abstol,dtmin,dtmax)
     default=Dict(:reltol => reltol, :abstol => abstol, :dtmin=>dtmin, :dtmax=>dtmax, :progress => true)
-    Euler = Dict( :alg =>  OrdinaryDiffEq.Tsit5() ) 
-    sol_Dict = merge(Euler, default)
+    Tsit5 = Dict( :alg =>  OrdinaryDiffEq.Tsit5() ) 
+    sol_Dict = merge(Tsit5, default)
     return sol_Dict
 end
 

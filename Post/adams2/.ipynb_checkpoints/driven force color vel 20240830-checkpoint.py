@@ -4,6 +4,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.signal import savgol_filter
+from matplotlib.colors import LinearSegmentedColormap
+
+# Original RGB colors
+rgb_colors = [
+    (38, 70, 83),
+    (40, 114, 113),
+    (41, 157, 143),
+    (138, 176, 125),
+    (232, 197, 107),
+    (243, 162, 97),
+    (230, 111, 81)
+]
+
+# Normalize the RGB values to [0, 1] range
+normalized_colors = [(r/255, g/255, b/255) for r, g, b in rgb_colors]
+
+# Create the colormap
+cmap_name = 'custom_cmap'
+custom_cmap = LinearSegmentedColormap.from_list(cmap_name, normalized_colors)
+
+
 
 def load_test(file):
     # Define the column names (equivalent to VariableNames in MATLAB)
@@ -114,7 +135,7 @@ for i1 in range(24, 31):
                     ax.plot(x[st:en], y_smoothed[st:en], color=color)
 
 # Add a colorbar to the figure using the original normalization
-sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_val, vmax=max_val))
+sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=plt.Normalize(vmin=min_val, vmax=max_val))
 sm.set_array([])  # Only needed for ScalarMappable
 plt.colorbar(sm, ax=ax, label='Velocity')
 ax.set_xlabel('t (s)')

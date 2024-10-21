@@ -1,8 +1,0 @@
-
-cmd.exe /K "C:\Users\lovca\anaconda3\Scripts\activate.bat & conda activate pydy__env & python "C:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\test\pydy_test\hello_run_prefect.py" --name tb_355_ --dt 1e-2 --cfg1 aa --cfg2 contact_g65 --app 355 --t 3.5 --bf C:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/ --rt 1e-3 --at 1e-3 --ma 1e-2 --mi 1e-8 --sn Tsit5"
-cmd.exe /K "C:\Users\lovca\anaconda3\Scripts\activate.bat & conda activate pydy__env & python "C:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\test\pydy_test\hello_run_prefect.py" --name tb_353_g3_no --dt 1e-2 --cfg1 aa --cfg2 contact_g3_no --app 353 --t 0.5 --bf C:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/ --rt 1e-3 --at 1e-3 --ma 1e-2 --mi 1e-8 --sn Tsit5"
-
-cmd.exe /K "C:\Users\lovca\anaconda3\Scripts\activate.bat & conda activate pydy__env & python "C:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\test\pydy_test\hello_run_prefect.py" --name tb_353_g3_fix_acontdamp --dt 1e-2 --cfg1 aa --cfg2 contact_g3_fix_acontdamp --app 353 --t 0.5 --bf C:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/ --rt 1e-3 --at 1e-3 --ma 1e-2 --mi 1e-8 --sn Tsit5"
-
-
-

@@ -18,5 +18,5 @@ set mi=%3
 set sn=%4
 
 
-julia.exe %JULIAENV% %filename% %arg2% %arg3% %arg4% %arg5% %time% %runname% %bf% %rt% %at% %ma% %mi% %sn%
+julia.exe --project=%JULIAENV% %filename% %arg2% %arg3% %arg4% %arg5% %time% %runname% %bf% %rt% %at% %ma% %mi% %sn%
 exit

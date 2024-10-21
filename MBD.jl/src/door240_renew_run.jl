@@ -57,7 +57,6 @@ function run(params::ODEParams, results::ODERunResults)
 
     # Initialize the integrator
 
-
     # Save callback
     save_func(u, t, integrator) = (
         # Collect relevant values here
@@ -75,21 +74,15 @@ function run(params::ODEParams, results::ODERunResults)
     # Manually step through the ODE solution
 
     # -------------
-
-
     PosConstrMax = 10^-4  # Limit on position constraint error
     VelConstrMax = 10^-4  # Limit on velocity constraint error
     sec1=1:nb*7
     sec2=nb*7+1:nb*7+nc
     sec3=nb*7+nc+1:nb*14+nc
 
-
     # -------------
-
-
     while integrator.t < params.tspan[2]
         step!(integrator)
-        # println("NNNNNNN")
         # Collect any additional results here if necessary
         u=integrator.u
         qd=u[sec3]
@@ -103,26 +96,19 @@ function run(params::ODEParams, results::ODERunResults)
             qd += delqd
             #corvel += 1
         end
-
-
-
-
         u[sec3]=qd
         u[sec1]=q
         u[sec2]=l
         integrator.u=u
-
         
     end
     sol=integrator.sol
     # # Access saved values
     saved_data = saved_values.saveval
     merge_df = merge_sol_result(sol, saved_values)
-
     push!(results.solutions, sol)
     push!(results.l_saved_data, merge_df)
 end
-
 
 
 function merge_sol_result(sol, saved_values) #@note name
@@ -138,38 +124,7 @@ function merge_sol_result(sol, saved_values) #@note name
     n_saved_steps = length(saved_values.saveval)
     names = []
     push!(names,"p1","p2")
-    # push!(names,"mf_fx")
-    # push!(names,"mf_fy")
-    # push!(names,"mr_fx")
-    # push!(names,"mr_fy")
-    # push!(names,"mf_ub_x")
-    # push!(names,"mf_ub_y")
-    # push!(names,"mr_ub_x")
-    # push!(names,"mr_ub_y")
-    # push!(names,"mf_Fx","mf_Fy")
-    # push!(names,"mf_Fdx")
-    # push!(names,"mf_Fdy")
-    # push!(names,"mf_vx","mf_vy")
-    # push!(names,"mf_vel_slide")
-    # push!(names,"mf_pen_pos_delta_local")
-    # push!(names,"mf_pen_mod","mf_vel_mod","mf_testflag")
-    # push!(names,"mf_Ffx")
-    # push!(names,"mf_Ffy")
-    # push!(names,"mg_diffz","lg_diffz")
-    # push!(names,"mg_fx","mg_fy","mg_fz")
-    # push!(names,"lg_fx","lg_fy","lg_fz")
-    # push!(names,"mg_vx","mg_vy")
-    # push!(names,"lg_vx","lg_vy")
-    # push!(names,"mg_ub_x")
-    # push!(names,"mg_ub_y")
-    # push!(names,"lg_ub_x")
-    # push!(names,"lg_ub_y")
-    # push!(names,"mg_vel_slide")
-    # push!(names,"lg_vel_slide")
-    # push!(names,"mg_miu")
-    # push!(names,"lg_miu")
-    # push!(names,"mg_debug_dir")
-    # push!(names,"lg_debug_dir")
+
     # Append the saved data directly to the DataFrame, adjusting for length mismatch
     for i in 1:length(saved_values.saveval[1])  # Assuming the first tuple represents the saved data structure
         col_name=Symbol("ex_$(i)_$(names[i])")
