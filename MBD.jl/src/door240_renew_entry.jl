@@ -4,7 +4,6 @@ include("./door240_renew_run.jl")
 using DifferentialEquations
 # Main entry point to control execution
 using Alert
-# Main entry function to control execution and comparison of different runs
 using OrdinaryDiffEq
 # problem 
 function test(sol_Dict,par_Dict)

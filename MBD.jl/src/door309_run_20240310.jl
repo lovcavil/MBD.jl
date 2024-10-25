@@ -52,7 +52,7 @@ function run(params::ODEParams, results::ODERunResults)
 
     # Problem setup
     p = [SMDT, STSDAT, SJDT, par, p_contact]
-    prob = ODEProblem(odequation, u₀, params.tspan, p)
+    prob = ODEProblem(odequation!, u₀, params.tspan, p)
 
     # save callback
     sec1=1:nb*7

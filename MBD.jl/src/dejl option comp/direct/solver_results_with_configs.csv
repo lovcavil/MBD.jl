@@ -1,0 +1,2 @@
+Solver,autodiff,linsolve,abstol,reltol,initial_state,tspan,ΔE,Avg Time (s),Termination_reason,All Times
+Trapezoid_autodiff_false_forward__tol_1e3_short_timespan_state1,"(false, Val{:forward})",nothing,0.001,0.001,"[0.0, 0.1, 0.5, 0.0]","(0.0, 1.0)",227.7861123167297,1.1192507,completed,[1.1192507]

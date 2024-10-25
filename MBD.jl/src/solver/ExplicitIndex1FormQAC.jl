@@ -5,9 +5,9 @@ using OrdinaryDiffEq, ProgressLogging
 #using Sundials
 using Printf
 #using LSODA
-export odequation
+export odequation!
 
-function odequation(du, u, p, t)
+function odequation!(du, u, p, t)
     # println("t $t")
     SMDT, STSDAT, SJDT, par, p_contact = p
     nb, ngc, nh, nc, g, intol, Atol, h0, hvar, NTSDA = mathfunction.parPart(par)

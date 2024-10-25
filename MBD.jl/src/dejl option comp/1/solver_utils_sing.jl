@@ -4,6 +4,7 @@ using Printf
 using Plots
 using Statistics
 using DelimitedFiles
+include("./door240_recons_run.jl")
 # Function to create and solve the ODE problem step-by-step using the integrator interface
 function solve_HH_system_step(f, initial_state, tspan, solver; abstol=1e-6, reltol=1e-6)
     prob = ODEProblem(f, initial_state, tspan)
@@ -85,14 +86,15 @@ function run_solver(config)
 
     # Run solver step-by-step and time it
     elapsed_time = @elapsed begin
-        integrator = solve_HH_system_step(HH_first_order!, initial_state, tspan, solver; abstol=abstol, reltol=reltol)
+        #integrator = solve_HH_system_step(HH_first_order!, initial_state, tspan, solver; abstol=abstol, reltol=reltol)
+        integrator = run(tspan, solver; abstol=abstol, reltol=reltol)
     end
 
     return integrator, elapsed_time
 end
 
 # Main function to run all solvers, collect data, and handle multiple runs (unchanged)
-function run_solvers(solver_configs, n=10)
+function run_solvers(solver_configs,csv_filename, n=10)
     sols = Dict{String, Any}()  # Changed from ODEIntegrator to Any
     energies = Dict{String, Vector{Float64}}()
     avg_times = Dict{String, Float64}()
@@ -111,16 +113,13 @@ function run_solvers(solver_configs, n=10)
     for config in solver_configs
         solver_name = config.name
         push!(solver_names, solver_name)
-
+        # Run solver once to capture solution and energy (no need to run multiple times for the same solution)
+        integrator, _ = run_solver(config)
+        sols[solver_name] = integrator.sol
         # Run solver multiple times and get average and all times
         run_times, avg_time = run_solver_multiple_times(config, n)
         all_times[solver_name] = run_times
         avg_times[solver_name] = avg_time
-
-        # Run solver once to capture solution and energy (no need to run multiple times for the same solution)
-        integrator, _ = run_solver(config)
-        sols[solver_name] = integrator.sol
-
         # Calculate energy and energy difference
         energy, ΔE = calculate_energy_and_deltaE(integrator)
         energies[solver_name] = energy
@@ -148,7 +147,7 @@ function run_solvers(solver_configs, n=10)
     print_solver_comparison(solver_names, ΔE_values, avg_time_values)
 
     # Save results to CSV
-    export_results_to_csv(csv_data)
+    export_results_to_csv(csv_data,csv_filename)
 
     return sols, energies, avg_times, ΔEs, all_times
 end
@@ -156,7 +155,7 @@ end
 # Function to calculate energy and ΔE (energy difference)
 function calculate_energy_and_deltaE(integrator)
     # Assuming each u is a vector or tuple of 4 elements (x, y, px, py)
-    energy = [E(u[1], u[2], u[3], u[4]) for u in integrator.sol.u]  # Explicitly pass all 4 components of u to E
+    energy = [E(u) for u in integrator.sol.u]  # Explicitly pass all 4 components of u to E
     ΔE = energy[1] - energy[end]
     return energy, ΔE
 end
@@ -182,31 +181,45 @@ function export_results_to_csv(csv_data, csv_filename="solver_results_with_confi
     writedlm(csv_filename, csv_data, ',')
     println("Results exported to $csv_filename")
 end
-
-function analyze_HH_system(sols, energies, ΔEs, times)
-    for solver_name in keys(sols)
-        sol = sols[solver_name]
-        energy = energies[solver_name]
-        ΔE = ΔEs[solver_name]
-        elapsed_time = times[solver_name]
-
-        # Call the hhplot recipe to generate the plot
-        plt_s = plot_HH(sol, E)
-        display(plt_s)
-    end
-end
-
 # Function to analyze and compare results from multiple solvers
 function analyze_HH_system_compare(sols, energies, ΔEs, times)
     solver_names = collect(keys(sols))
 
     # Prepare data for plotting
     sol_list = [sols[name] for name in solver_names]
+    energy_list = [energies[name] for name in solver_names]
     labels = solver_names
 
     # Plot comparative results using the comparison recipe
-    plt1, plt2, plt3 = plot_HH_comparison(sol_list, E,labels)
-    display(plt1)
-    display(plt2)
+    plt3 = plot_HH_comparison(sol_list, energy_list,labels)
+
     display(plt3)
+end
+function plot_HH_comparison(sol_list,energy_list, labels)
+    num_solvers = length(labels)
+    colors = get_colors(num_solvers)
+
+
+    # 3. Energy Change Comparison Plot
+    plt3 = plot(legend=:outerbottom, size=(900, 600), xlabel="Time", ylabel="ΔEnergy", title="Energy Change Comparison")
+    for i in 1:num_solvers
+        t = sol_list[i].t
+        energy = energy_list[i]
+        delta_energy = energy .- energy[1]  # ΔEnergy over time
+        plot!(plt3, t, delta_energy, label=labels[i], color=colors[i])
+    end
+
+    return plt3
+end
+
+# Helper function to get colors based on the number of solvers
+function get_colors(num_solvers::Int)
+    base_colors = [:blue, :red, :green, :orange, :purple, :cyan, :magenta, :yellow, :black]
+
+    # Repeat colors if needed
+    if num_solvers > length(base_colors)
+        return vcat(base_colors, repeat(base_colors, ceil(Int, num_solvers / length(base_colors))))
+    else
+        return base_colors[1:num_solvers]
+    end
 end
