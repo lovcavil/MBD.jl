@@ -57,11 +57,11 @@ function main()
         "Rodas4P2" => "Rodas4P2",  # 4th order L-stable stiffly stable Rosenbrock method, improved for inexact Jacobians
         "Rodas5" => "Rodas5",  # 5th order A-stable stiffly stable Rosenbrock method with stiff-aware 4th order interpolant
         "Rodas5P" => "Rodas5P",  # 5th order A-stable stiffly stable Rosenbrock method with improved stability for adaptive time stepping
-        "ROS2" => "ROS2",  # 2nd order L-stable Rosenbrock-Wanner method with 2 internal stages
+        #"ROS2" => "ROS2",  # 2nd order L-stable Rosenbrock-Wanner method with 2 internal stages
         "ROS3" => "ROS3",  # 3rd order L-stable Rosenbrock-Wanner method with 3 internal stages
-        "ROS2PR" => "ROS2PR",  # 2nd order stiffly accurate Rosenbrock-Wanner method with 3 internal stages
+        #"ROS2PR" => "ROS2PR",  # 2nd order stiffly accurate Rosenbrock-Wanner method with 3 internal stages
         "ROS3PR" => "ROS3PR",  # 3rd order stiffly accurate Rosenbrock-Wanner method with 3 internal stages
-        "Scholz4_7" => "Scholz4_7",  # 3rd order stiffly accurate Rosenbrock-Wanner method (converges with order 4 for stiff cases)
+        #"Scholz4_7" => "Scholz4_7",  # 3rd order stiffly accurate Rosenbrock-Wanner method (converges with order 4 for stiff cases)
         #"ROS3PRL" => "ROS3PRL",  # 3rd order stiffly accurate Rosenbrock-Wanner method with 4 internal stages
         "ROS3PRL2" => "ROS3PRL2",  # 3rd order stiffly accurate Rosenbrock-Wanner method with 4 internal stages (improved version)
         # Rosenbrock-W Methods
@@ -85,31 +85,9 @@ function main()
          "autodiff_false_central" => [false, Val{:central}],
          "autodiff_false_complex" => [false, Val{:complex}],
     )
+
     linsolve_dict = Dict(
-        ""=> nothing,
-        "QR" => QRFactorization(),
-        "KrylovJLCG" => KrylovJL_CG(),
-        "KrylovJLGMRES" => KrylovJL_GMRES(),
-        "CholeskyFactorization" => CholeskyFactorization(),
-        "BunchKaufmanFactorization" => BunchKaufmanFactorization(),
-        "CHOLMODFactorization" => CHOLMODFactorization(),
-        "NormalCholeskyFactorization" => NormalCholeskyFactorization(),
-        "NormalBunchKaufmanFactorization" => NormalBunchKaufmanFactorization(),
-        "LUFactorization" => LUFactorization(),
-        "GenericLUFactorization" => GenericLUFactorization(),
-        "QRFactorization" => QRFactorization(),
-        "SVDFactorization" => SVDFactorization(),
-        "SimpleLUFactorization" => SimpleLUFactorization(),
-        #"KLUFactorization" => KLUFactorization(),
-        #"UMFPACKFactorization" => UMFPACKFactorization(),
-        #"KrylovJL_MINRES" => KrylovJL_MINRES(),
-        "KrylovJL_GMRES" => KrylovJL_GMRES(),
-        "KrylovJL_BICGSTAB" => KrylovJL_BICGSTAB(),
-        #"KrylovJL_LSMR" => KrylovJL_LSMR(),
-        #"KrylovJL_CRAIGMR" =>KrylovJL_CRAIGMR(),
-    )
-    linsolve_dict = Dict(
-        ""=> nothing,
+        #""=> nothing,
         "QRFactorization" => "QRFactorization",
         "LUFactorization" => "LUFactorization",
         "GenericLUFactorization" => "GenericLUFactorization",
@@ -121,20 +99,20 @@ function main()
     # Tolerance Group (Set 2)
     tolerance_dict = Dict(
         #"tol_1e12" => [1e-12, 1e-12],
-        "tol_1e3" => [1e-3, 1e-3],
+        #"tol_1e3" => [1e-3, 1e-3],
         "tol_1e6" => [1e-6, 1e-6],
         #"tol_1e9" => [1e-9, 1e-9]
     )
     # Timespan Group (Set 3)
     timespan_dict = Dict(
         #"short_timespan" => [0.0, 1.0],
-        "short_timespan2" => [0.0, 5.0],
+        "short_timespan2" => [0.0, 3.0],
         #"long_timespan" => (0.0, 1000.0)
     )
     initial_state_dict = Dict(
         "state1" => [0.0, 0.1, 0.5, 0.0])
     timeout_dict=Dict(
-        "tLimit"=>120.0
+        "tLimit"=>60.0
     )    
     # Combine the configurations
     param_combinations = generate_param_combinations([solver_dict,autodiff_dict,linsolve_dict, tolerance_dict, timespan_dict,initial_state_dict,timeout_dict])

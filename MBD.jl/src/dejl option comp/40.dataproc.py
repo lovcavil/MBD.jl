@@ -47,7 +47,7 @@ def csv_folder_to_excel_with_styles(folder_path, output_excel):
     print(f"All CSV files from {folder_path} have been combined into {output_excel} in a single sheet with filters and styles applied.")
 
 # Example usage
-folder_path = "D:\OneDrive\Articles/10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\src\dejl option comp/2024-10-25-13-21-21"  # replace with the actual folder path
-output_excel = "D:\OneDrive\Articles/10.Working\[D21][20211009]ContactMechanics\MBD.jl\MBD.jl\src\dejl option comp/2024-10-25-13-21-21/combined_output_with_styles.xlsx"  # replace with desired Excel output filename
+folder_path = "E:/New Folder/A16/2024-10-25-20-48-34"  # replace with the actual folder path
+output_excel = os.path.join(folder_path, "/combined_output_with_styles.xlsx" ) # replace with desired Excel output filename
 
 csv_folder_to_excel_with_styles(folder_path, output_excel)

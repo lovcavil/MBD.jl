@@ -54,32 +54,26 @@ function run(params::ODEParams, results::ODERunResults)
     # Problem setup
     p = [SMDT, STSDAT, SJDT, par, p_contact]
     prob = ODEProblem(odequation!, u₀, params.tspan, p)
-
     # Initialize the integrator
-
     # Save callback
     save_func(u, t, integrator) = (
         # Collect relevant values here
         0, 0
     )
-
     saved_values = SavedValues(Float64, create_saved_values_type(2))
     cb1 = SavingCallback(save_func, saved_values)
-
     # Set up a termination condition
     condition(u, t, integrator) = (u[1] < 999992.14)
     affect!(integrator) = terminate!(integrator)
     cb2 = DiscreteCallback(condition, affect!)
     integrator = init(prob; params.solve_kwargs..., callback=CallbackSet(cb1))
     # Manually step through the ODE solution
-
     # -------------
     PosConstrMax = 10^-4  # Limit on position constraint error
     VelConstrMax = 10^-4  # Limit on velocity constraint error
     sec1=1:nb*7
     sec2=nb*7+1:nb*7+nc
     sec3=nb*7+nc+1:nb*14+nc
-
     # -------------
     while integrator.t < params.tspan[2]
         step!(integrator)

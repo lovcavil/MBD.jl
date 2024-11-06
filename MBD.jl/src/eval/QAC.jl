@@ -42,6 +42,39 @@ function QACEval(tn, q, qd, SMDT, STSDAT, par, p_contact)
             b = d_contact["b"]
             index = 7 * (b - 1) + 3
             QACi = vcat(fx, fy,  fz, zeros(4))
+        elseif type == "simple_y"
+            fy=0.0
+            thres=0.00000
+            b = d_contact["b"]
+            index = 7 * (b - 1) + 2
+            y=q[index]-0.02
+            vel_v = qd[index]
+            vel_v=0.0
+            if y < (-thres)
+                delta_v = y - (thres)
+
+                Eeq = d_contact["p"]["Eeq"]
+                n = d_contact["p"]["n_damper"]
+                init_vel_v = d_contact["p"]["B5"]
+                Cr=0.5
+                eta = 8 * (1.0 - Cr) / (5.0 * Cr * init_vel_v);
+                fy = Eeq * (-delta_v)^ (1.5) * (1.0 + eta * vel_v);
+
+            end
+            if y > (thres)
+                delta_v = y - (thres)
+
+                Eeq = d_contact["p"]["Eeq"]
+                n = d_contact["p"]["n_damper"]
+                init_vel_v = d_contact["p"]["B5"]
+                Cr=0.5
+                eta = 8.0 * (1.0 - Cr) / (5.0 * Cr * -init_vel_v);
+                fy = -Eeq * (delta_v)^ (1.5) * (1.0 + eta * -vel_v);
+
+            end
+            #println("y=$(y) fy=$fy")
+            index = 7 * (b - 1) + 3
+            QACi = vcat(0.0, fy,  0.0, zeros(4))    
         end
 
         QAC = add_constraint!(QAC, QACi, 7 * (b - 1), 0)

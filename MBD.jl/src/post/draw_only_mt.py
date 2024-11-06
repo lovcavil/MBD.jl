@@ -4,11 +4,13 @@ import os
 from multiprocessing import Pool
 
 # Create a folder named 'plots' if it does not exist
-output_folder = './plots'
+output_folder = 'D:\OneDrive\Articles/10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots/20241028a'
 os.makedirs(output_folder, exist_ok=True)
 
 # Read the CSV data into a DataFrame
 file_path = './csv/Euler_run1.csv'
+file_path = 'E:/New Folder/A16/con1/1.csv.2'
+
 df = pd.read_csv(file_path)
 
 # Function to plot and save each figure
