@@ -68,23 +68,32 @@ def run_plotting(fn, data_csv_file, output_folder, dpi=300):
     plot_all_columns_with_generated_time(fn, data_csv_file, output_folder, selected_colors, selected_styles, dpi)
 
 if __name__ == "__main__":
+    folder_path = os.getenv("ONEDRIVE")
     matplotlib.rcParams['font.family'] = 'Times New Roman'
-    data_csv_file = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\GFO_LG U4_export.csv"  # Replace with your actual data CSV file path
-    output_folder = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\Post\A16\f/"  # Replace with your desired output folder path
+    # Replace with your actual data CSV file path
+    output_folder = os.path.join(folder_path, r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\Post\A16\f/")
+
+    data_csv_file = r"\plots\adams2\7\GFO_LG U4_export.csv" 
+    data_csv_file=os.path.join(folder_path,r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl",data_csv_file)
     run_plotting('LG', data_csv_file, output_folder, dpi=300)
 
-    data_csv_file = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\GFO_LG U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file = r"\plots\adams2\7\GFO_LG U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file=os.path.join(folder_path,r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl",data_csv_file)
     run_plotting('LG_Y', data_csv_file, output_folder, dpi=300)
     
-    data_csv_file = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\GFO_MG U4_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file = r"\plots\adams2\7\GFO_MG U4_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file=os.path.join(folder_path,r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl",data_csv_file)
     run_plotting('MG', data_csv_file, output_folder, dpi=300)
 
-    data_csv_file = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\GFO_MG U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file = r"\plots\adams2\7\GFO_MG U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file=os.path.join(folder_path,r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl",data_csv_file)
     run_plotting('MG_Y', data_csv_file, output_folder, dpi=300)
     
-    data_csv_file = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\GFO_MF U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file = r"\plots\adams2\7\GFO_MF U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file=os.path.join(folder_path,r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl",data_csv_file)
     run_plotting('MF', data_csv_file, output_folder, dpi=300)
     
-    data_csv_file = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\GFO_LF U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file = r"\plots\adams2\7\GFO_LF U3_export.csv"  # Replace with your actual data CSV file path
+    data_csv_file=os.path.join(folder_path,r"Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl",data_csv_file)
     run_plotting('LF', data_csv_file, output_folder, dpi=300)
 # 

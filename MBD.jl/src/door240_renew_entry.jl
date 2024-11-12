@@ -42,7 +42,7 @@ function main()
         time=3.5
         time=1.0
         runname="test_240"
-        bf="D:/OneDrive/Articles/10.Working/[D21][20211009]ContactMechanics/MBD.jl/"
+        bf="C:/Users/lovca/OneDrive/Articles/10.Working/MBD.jl/"
         reltol = 1e-6
         abstol = 1e-5
         dtmin = 1e-10

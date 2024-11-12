@@ -17,9 +17,10 @@ scaling_dict = {
     'Strain@B3_4.RN_6': 0.2455,
 }
 
-# Define paths
-path1 = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\MR_door (run 29)_out2.csv"
-path2 = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\request_ACC_door U2_export.csv"
+folder_path = os.getenv("ONEDRIVE")
+
+path1 = os.path.join(folder_path,r"Articles\10.Working\MBD.jl\plots\adams2\MR_door (run 29)_out2.csv")
+path2 = os.path.join(folder_path,r"Articles\10.Working\MBD.jl\plots\adams2\7\request_ACC_door U2_export.csv")
 
 # Load data
 df1 = pd.read_csv(path1)
@@ -166,7 +167,7 @@ def create_and_save_figures(processed_data1, processed_data2, selected_columns2)
 
             # ax.set_title(f"Grouped by Third Character: {third_char}", fontsize=20)
             ax.set_xlabel("t (s)", fontdict=textstyle)
-            ax.set_ylabel("Acceleration in x Direction (m/s²)", fontdict=textstyle)
+            ax.set_ylabel("Acceleration in x direction (m/s²)", fontdict=textstyle)
             
             # Set tick labels for each axis
             ax.tick_params(axis='both', labelsize=tick_fontsize)  # Set label size

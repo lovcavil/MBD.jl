@@ -17,8 +17,8 @@ scaling_dict = {
 
 
 # Define paths
-path1 = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\MR_door (run 29)_out2.csv"
-path2 = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\plots\adams2\7\request_ACC_door U2_export.csv"
+path1 = r"C:\Users\lovca\OneDrive\Articles\10.Working\MBD.jl\plots\adams2\MR_door (run 29)_out2.csv"
+path2 = r"C:\Users\lovca\OneDrive\Articles\10.Working\MBD.jl\plots\adams2\7\request_ACC_door U2_export.csv"
 
 # Load data
 df1 = pd.read_csv(path1)
@@ -89,7 +89,7 @@ def create_figure(processed_data1, processed_data2, selected_columns1, selected_
     ax.plot(processed_data1['t_adj'], processed_data1['acc@A7_X.RN_6'], label=f'Experiment', color='k',linewidth=1, linestyle='--')
     ax.plot(processed_data2['t_adj'], processed_data2['413.asc'], label=f'Simulation',color='k',linewidth=1)
     ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Acceleration in x Direction (m/s²)", fontdict=textstyle)
+    ax.set_ylabel("Acceleration in x direction (m/s²)", fontdict=textstyle)
     ax.legend(fontsize=18)
     plt.xticks(fontsize=tick_fontsize, fontfamily=tick_font)
     plt.yticks(fontsize=tick_fontsize, fontfamily=tick_font)
