@@ -1,4 +1,7 @@
 {
-    "julia.environmentPath": "c:\\Users\\lovca\\.julia\\envs\\de"
+    "julia.environmentPath": "c:\\Users\\lovca\\.julia\\envs\\de",
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "python-envs.pythonProjects": []
     
 }

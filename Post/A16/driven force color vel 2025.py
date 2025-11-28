@@ -75,7 +75,8 @@ def plot_smoothed_pressure(label_data, normalized_label_data, cmap, min_val, max
         for i2 in range(1, 9):
             if (i1, i2) in [(24, 6), (31, 1), (32, 4)]:
                 continue
-            file_path = f"D:/D11.Proj/A009.BYD_R2/20220710/DATA_PROC/CUT/CLOSE_NORMAL/MR_door_{i1}{i2}.asc"
+            # Use a relative path for the data files
+            file_path = os.path.join("C:/Vault/10.Project/A009.BYD_R2/20220710/DATA_PROC/CUT/data_allclose_22919", f"MR_door_{i1}{i2}.asc")
             if (i1, i2) in normalized_label_data and os.path.isfile(file_path):
                 norm_val = normalized_label_data[(i1, i2)]
                 color = cmap(norm_val)
@@ -122,8 +123,8 @@ def plot_smoothed_pressure(label_data, normalized_label_data, cmap, min_val, max
     plt.yticks(fontsize=tick_fontsize, fontfamily=tick_font)
     plt.xticks(fontsize=tick_fontsize, fontfamily=tick_font)
     #plt.show()
-    output_folder = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\Post\A16"
-    output_path = os.path.join(output_folder, 'drives2.png')
+    output_folder = r"Post\A16"
+    output_path = os.path.join(output_folder, 'drives2_0.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     return dforcesme, dforcesme0
 
@@ -169,8 +170,9 @@ def plot_violin(label_data, cmap):
     ax.scatter(xi_list, yi_list, color='black', s=10, zorder=3)
 
     #plt.show()
-    output_folder = r"D:\OneDrive\Articles\10.Working\[D21][20211009]ContactMechanics\MBD.jl\Post\A16"
-    output_path = os.path.join(output_folder, 'drives.png')
+    # Use a relative path for the output file
+    output_folder = r"Post\A16"
+    output_path = os.path.join(output_folder, 'drives_0.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
 
 def main():
@@ -198,6 +200,11 @@ def main():
 
     # 绘制平滑的压力曲线，传入 min_val 和 max_val
     dforcesme, dforcesme0 = plot_smoothed_pressure(label_data, normalized_label_data, cmap, min_val, max_val)
+
+    # Check if any data was processed
+    if not dforcesme:
+        print("Warning: No data files were found or processed. Halting script.")
+        return
 
     # 绘制小提琴图并添加数据点
     plot_violin(label_data, cmap)
