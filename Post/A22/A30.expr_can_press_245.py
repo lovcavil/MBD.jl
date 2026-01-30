@@ -5,8 +5,11 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 EXPR_DIR = SCRIPT_DIR / "DATA" / "expr"
+SIM_DIR = SCRIPT_DIR / "DATA" / "sim"
 
 CAN_COLUMN = "can@press.RN_1"
+SIM_TIME_COL = "TIME"
+SIM_PRESS_COL = "U2"
 
 
 def load_data(path: Path) -> pd.DataFrame:
@@ -40,6 +43,7 @@ def create_axes():
 
 
 def plot_can_pressure(ax, df: pd.DataFrame, start_time: float):
+    """Plot the experiment strain gauge pressure and align time to 0 at the window start."""
     textstyle = {"family": "Times New Roman", "size": 32}
     tick_font = "Times New Roman"
     tick_fontsize = 20
@@ -48,11 +52,30 @@ def plot_can_pressure(ax, df: pd.DataFrame, start_time: float):
         smooth_series(pd.to_numeric(df[CAN_COLUMN], errors="coerce"), window=5),
         color="navy",
         linestyle="-",
-        label="can@press.RN_1",
+        label="Experiment: can@press.RN_1",
     )
     ax.set_xlabel("Time (s)", fontdict=textstyle)
     ax.set_ylabel("Contact Force (N)", fontdict=textstyle)
-    ax.legend(fontsize=20)
+    plt.xticks(fontsize=tick_fontsize, fontfamily=tick_font)
+    plt.yticks(fontsize=tick_fontsize, fontfamily=tick_font)
+    plt.tight_layout()
+    return ax
+
+
+def plot_sim_pressure(ax, df: pd.DataFrame):
+    """Plot the simulation result exported from Adams (DATA/sim)."""
+    textstyle = {"family": "Times New Roman", "size": 32}
+    tick_font = "Times New Roman"
+    tick_fontsize = 20
+    ax.plot(
+        df[SIM_TIME_COL],
+        smooth_series(pd.to_numeric(df[SIM_PRESS_COL], errors="coerce"), window=3),
+        color="darkorange",
+        linestyle="--",
+        label=f"Sim: req_PRESS.{SIM_PRESS_COL}",
+    )
+    ax.set_xlabel("Time (s)", fontdict=textstyle)
+    ax.set_ylabel("Contact Force (N)", fontdict=textstyle)
     plt.xticks(fontsize=tick_fontsize, fontfamily=tick_font)
     plt.yticks(fontsize=tick_fontsize, fontfamily=tick_font)
     plt.tight_layout()
@@ -60,14 +83,20 @@ def plot_can_pressure(ax, df: pd.DataFrame, start_time: float):
 
 
 def main():
-    path = EXPR_DIR / "MR_door (run 24)_out.csv"
-    df = load_data(path)
+    expr_path = EXPR_DIR / "MR_door (run 24)_out.csv"
+    sim_path = SIM_DIR / "req_PRESS_clean.csv"
+    expr_df = load_data(expr_path)
+    sim_df = load_data(sim_path)
     start_time = 60.9
     end_time = 63
-    filtered = filter_data(df, "t", start_time, end_time)
+    sim_end_time = 1.3
+    filtered_expr = filter_data(expr_df, "t", start_time, end_time)
+    filtered_sim = filter_data(sim_df, SIM_TIME_COL, 0, sim_end_time)
 
     fig, ax = create_axes()
-    ax = plot_can_pressure(ax, filtered, start_time)
+    ax = plot_can_pressure(ax, filtered_expr, start_time)
+    ax = plot_sim_pressure(ax, filtered_sim)
+    ax.legend(fontsize=20, loc="upper left")
 
     output_folder = SCRIPT_DIR / "validation_outputs"
     output_folder.mkdir(parents=True, exist_ok=True)
