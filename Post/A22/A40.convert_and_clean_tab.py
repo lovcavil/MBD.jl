@@ -3,14 +3,12 @@
 
 from __future__ import annotations
 
-import argparse
 import csv
 from pathlib import Path
 from typing import Iterable, List
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ADAMS_DIR = SCRIPT_DIR / "DATA" / "Adams"
-SIM_DIR = SCRIPT_DIR / "DATA" / "sim"
+DATA_DIR = SCRIPT_DIR / "DATA"
 
 
 def _iter_tab_files(base_dir: Path) -> Iterable[Path]:
@@ -54,38 +52,51 @@ def _convert_single(tab_path: Path, dest_dir: Path) -> Path:
     return dest_path
 
 
+def _discover_adams_folders(base_dir: Path) -> List[Path]:
+    """Find all Adams* folders in the base directory."""
+    return sorted([f for f in base_dir.glob("Adams*") if f.is_dir()])
+
+
+def _get_sim_folder(adams_folder: Path, base_dir: Path) -> Path:
+    """Generate sim folder name from Adams folder name."""
+    folder_name = adams_folder.name
+    sim_name = folder_name.replace("Adams", "sim")
+    return base_dir / sim_name
+
+
 def main() -> None:
-    args = parse_args()
-    dest_dir = args.output_dir.resolve()
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    converted = []
-    for tab_file in _iter_tab_files(args.source_dir):
-        converted_path = _convert_single(tab_file, dest_dir)
-        converted.append(converted_path)
+    """Convert all .tab files from all Adams* folders to corresponding sim folders."""
+    adams_folders = _discover_adams_folders(DATA_DIR)
 
-    if converted:
-        print("Created cleaned CSVs:")
-        for path in converted:
-            print(f" - {path}")
+    if not adams_folders:
+        print("No Adams* folders found in DATA directory.")
+        return
+
+    total_converted = 0
+
+    for adams_folder in adams_folders:
+        sim_folder = _get_sim_folder(adams_folder, DATA_DIR)
+
+        # Create sim folder if it doesn't exist
+        sim_folder.mkdir(parents=True, exist_ok=True)
+
+        # Convert all .tab files in this folder
+        converted = []
+        for tab_file in _iter_tab_files(adams_folder):
+            converted_path = _convert_single(tab_file, sim_folder)
+            converted.append(converted_path)
+
+        if converted:
+            print(f"Processing {adams_folder.name} → {sim_folder.name}")
+            for path in converted:
+                print(f"  Created: {path.relative_to(DATA_DIR)}")
+            print(f"  ✓ {len(converted)} file{'s' if len(converted) > 1 else ''} converted\n")
+            total_converted += len(converted)
+
+    if total_converted > 0:
+        print(f"Total: {total_converted} files converted across {len(adams_folders)} folder{'s' if len(adams_folders) > 1 else ''}")
     else:
-        print("No .tab files found.")
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Convert Adams tab exports into cleaned CSVs.")
-    parser.add_argument(
-        "--source-dir",
-        type=Path,
-        default=ADAMS_DIR,
-        help="Directory containing Adams *.tab exports",
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=SIM_DIR,
-        help="Destination directory for cleaned CSVs",
-    )
-    return parser.parse_args()
+        print("No .tab files found in any Adams folders.")
 
 
 if __name__ == "__main__":

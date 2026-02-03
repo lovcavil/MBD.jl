@@ -5,3 +5,5 @@ csv
 plots
 MBD.jl/src/dejl option comp/2024-10-25-15-17-13
 MBD.jl/src/dejl option comp/2024-10-25-13-21-21
+*.tab
+Post/A22/DATA
