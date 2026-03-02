@@ -42,13 +42,13 @@ DATA_DIR = SCRIPT_DIR / "DATA"
 
 # Default parameters (used if not in config)
 DEFAULT_SIM_FILE = "req_KALKER_MID_F_clean.csv"
-DEFAULT_SELECTED_COLUMNS_SIM = ["U3"]
+DEFAULT_SELECTED_COLUMNS_SIM = ["U3", "U2"]
 DEFAULT_START_TIME_SIM = 0
 DEFAULT_END_TIME_SIM = 2
 DEFAULT_DATA_AMOUNT = 8
 DEFAULT_SMOOTHING_METHOD = "Rolling Mean"
 DEFAULT_WINDOW_SIZES_EXPR = [1] * 9
-DEFAULT_WINDOW_SIZES_SIM = [1] * 9
+DEFAULT_WINDOW_SIZES_SIM = [1]
 
 SIM_TIME_COL = "TIME"
 
@@ -126,6 +126,20 @@ def filter_data(df, time_col: str, start_time: float, end_time: float, columns: 
     filtered = df.loc[mask].copy()
     filtered[time_col] = time_series[mask]
     return filtered, columns[:max_columns]
+
+
+def calculate_magnitude(filtered_df, columns: List[str], magnitude_column: str = "magnitude"):
+    """Calculate sqrt(U3^2 + U2^2) for given columns and replace with single magnitude column."""
+    if len(columns) >= 2 and "U3" in columns and "U2" in columns:
+        # Convert to numeric
+        u3 = pd.to_numeric(filtered_df["U3"], errors="coerce").values
+        u2 = pd.to_numeric(filtered_df["U2"], errors="coerce").values
+        # Calculate magnitude
+        magnitude = np.sqrt(u3**2 + u2**2)
+        # Add magnitude column
+        filtered_df.loc[:, magnitude_column] = magnitude
+        return [magnitude_column]
+    return columns
 
 
 def apply_scaling(filtered_df, columns: List[str], scaling_dict: Dict[str, float]):
@@ -240,6 +254,9 @@ def main():
     filtered_df_sim, selected_columns_sim = filter_data(
         df_sim, SIM_TIME_COL, start_time_sim, end_time_sim, selected_columns_sim, DEFAULT_DATA_AMOUNT
     )
+
+    # Calculate magnitude for simulation data (sqrt(U3^2 + U2^2))
+    selected_columns_sim = calculate_magnitude(filtered_df_sim, selected_columns_sim, magnitude_column="magnitude")
 
     # Apply scaling
     filtered_df_expr = apply_scaling(filtered_df_expr, selected_columns_expr, scaling_dict)
