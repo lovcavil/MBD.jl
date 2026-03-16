@@ -8,6 +8,45 @@
             "envManager": "ms-python.python:conda",
             "packageManager": "ms-python.python:conda"
         }
-    ]
-    
+    ],
+        "actionButtons": {
+        "defaultColor": "#ff0034", // Can also use string color names.
+        "loadNpmCommands":false, // Disables automatic generation of actions for npm commands.
+        "reloadButton":"♻️", // Custom reload button text or icon (default ↻). null value enables automatic reload on configuration change
+        "inheritGlobalCommands": false, // In case you use workspace-scope settings, and want to also use User (global) scope settings, you might enable this
+        "commands": [
+            {
+               "name": "$(file-code) Convert Tab",
+               "color": "green",
+               "singleInstance": true,
+               "command": "python Post/A22/A40.convert_and_clean_tab.py"
+            },
+            {
+               "name": "$(graph) Compare Expr/Sim",
+               "color": "purple",
+               "singleInstance": true,
+               "command": "python Post/A22/A20.compare_expr_sim_performance.py"
+            }
+        ]
+    },
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#fa1b49",
+        "activityBar.background": "#fa1b49",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#155e02",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#fa1b49",
+        "statusBar.background": "#dd0531",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#fa1b49",
+        "statusBarItem.remoteBackground": "#dd0531",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#dd0531",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#dd053199",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#dd0531"
 }

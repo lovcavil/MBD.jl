@@ -87,8 +87,8 @@ def convert(input_path: Path, output_path: Path) -> None:
 
 
 
-INPUT_PATH =  Path("Post/A22/DATA/csv/MR_door (run 30)_out.csv")
-OUTPUT_PATH = Path("Post/A22/DATA/expr//MR_door (run 30)_out.csv")
+INPUT_PATH =  Path("Post/A22/DATA/csv/MR_door (run 31)_out.csv")
+OUTPUT_PATH = Path("Post/A22/DATA/expr//MR_door (run 31)_out.csv")
 
 
 def main() -> None:
